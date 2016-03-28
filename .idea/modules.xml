@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/kotlin-test-2.iml" filepath="$PROJECT_DIR$/kotlin-test-2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kotlin-test-app/kotlin-test-app.iml" filepath="$PROJECT_DIR$/kotlin-test-app/kotlin-test-app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kotlin-test-java-app/kotlin-test-java-app.iml" filepath="$PROJECT_DIR$/kotlin-test-java-app/kotlin-test-java-app.iml" />
+    </modules>
+  </component>
+</project>

@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact name="web">
+    <output-path>$PROJECT_DIR$/web/js/app</output-path>
+    <root id="root">
+      <element id="module-output" name="kotlin-test-app" />
+    </root>
+  </artifact>
+</component>
