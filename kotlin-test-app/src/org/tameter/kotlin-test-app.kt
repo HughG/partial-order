@@ -6,15 +6,21 @@ import kotlin.browser.document
  * Created by hughg on 2016-03-28.
  */
 
+/*
+    See very useful info about (newbie mistakes with) promises at
+
+    https://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html
+ */
+
+// NOTE 2016-03-29 HughG: This doesn't work as an interface in compile-to-JS: catchAndLog isn't in the output.
 @native
-interface Promise<T> {
-//    fun then(result: (T) -> dynamic): dynamic
+abstract class Promise<T> {
     fun then(result: (T) -> T): Promise<T>
     fun catch(error: (T) -> Unit): Unit
+    fun catchAndLog(): Unit {
+        catch { console.log(it) }
+    }
 }
-
-@native
-interface Promise0 : Promise<dynamic> {}
 
 @native
 interface BulkQueryResult<T> {
@@ -42,18 +48,20 @@ interface BulkQueryRowValue {
 open class PouchDB(var name: String, var options: JSMap<dynamic> = JSMap())
 {
     // Delete database
-    fun destroy(options: JSMap<dynamic> = JSMap()): Promise0 = noImpl
+    fun destroy(options: JSMap<dynamic> = JSMap()): Promise<dynamic> = noImpl
 
     // Create/update doc
-    fun put(doc: dynamic): Promise0 = noImpl
-    fun get(id: String): Promise0 = noImpl
+    fun put(doc: dynamic): Promise<dynamic> = noImpl
+    fun get(id: String): Promise<dynamic> = noImpl
+
+    // Batch create
+    fun bulkDocs(docs: Array<Any>, options: JSMap<dynamic> = JSMap()): Promise<dynamic> = noImpl
 
     // Batch fetch
-    fun allDocs(options: JSMap<dynamic> = JSMap()): Promise0 = noImpl
-    fun <T> allDocsEx(options: JSMap<dynamic> = JSMap()): Promise<BulkQueryResult<T>> = noImpl
+    fun <T> allDocs(options: JSMap<dynamic> = JSMap()): Promise<BulkQueryResult<T>> = noImpl
 
     // Database info
-    fun info(): Promise0 = noImpl
+    fun info(): Promise<dynamic> = noImpl
 }
 
 @native("Object")
@@ -103,8 +111,6 @@ class Edge/*<N>*/ : PouchDoc() {
     var axis_id: String
     var from: String
     var to: String
-//    var from: N
-//    var to: N
 }
 
 fun edge(_id: String): Edge {
@@ -116,53 +122,18 @@ class Axis<E> : PouchDoc() {
 //    var edges: Array<E> = noImpl
 }
 
-//@native("Object")
-//class MultiGraph<N, A : Axis<E>, E : Edge<N>>(
-//) {
-//    var db: PouchDB = noImpl
-//    var nodes: Array<N> = noImpl
-//    var edges: Array<E> = noImpl
-////    var axes: JSMap<A> = noImpl
-//
-//    fun create(dbName: String, init: MultiGraph<N,A,E>.() -> Unit) {
-//        db = PouchDB(dbName)
-//
-//    }
-//}
-
 fun main(args: Array<String>) {
 //    console.log("Setting email ...")
 //    document.getElementById("email")?.setAttribute("value", "hello@kotlinlang.org")
 
-    val db: PouchDB = initDB()
+    val (db, promise) = initDB()
 
-    proposeEdges(db)
-
-//    console.log("Initialised ${doc}")
-
-//    db.get("mittens").then(fun(doc): dynamic {
-//        console.log("Read")
-//        console.log(doc)
-//        // update their age
-//        doc.age = 4
-//        // put them back
-//        console.log("Writing")
-//        console.log(doc)
-//        return db.put(doc)
-//    }).then(fun(doc): dynamic {
-//        // fetch mittens again
-//        return db.get("mittens")
-//    }).then(fun(doc): dynamic {
-//        console.log("Read back")
-//        console.log(doc);
-//        return null;
-//    }).catch(fun(err) {
-//        console.log("Read back")
-//        console.log(err);
-//    });
+    promise.then {
+        proposeEdges(db)
+    }.catchAndLog()
 }
 
-fun proposeEdges(db: PouchDB) {
+fun proposeEdges(db: PouchDB): Promise<dynamic> {
     // Read all nodes and edges
     val allNodesOptions = JSMap<dynamic>().apply {
         this["startkey"] = "Node_"
@@ -170,15 +141,10 @@ fun proposeEdges(db: PouchDB) {
         this["include_docs"] = true
     }
     console.log(allNodesOptions)
-//    db.allDocs<dynamic>(allNodesOptions).then {
-//        console.log(it)
-//        it.rows.forEach { console.log(it.doc?.description ?: "no desc") }
-//        it
-//    }
-    db.allDocs(allNodesOptions).then { row ->
-        console.log(row)
-//        row.rows.forEach { console.log(row.doc?.description ?: "no desc") }
-//        row
+    return db.allDocs<Node>(allNodesOptions).then { result ->
+        console.log(result)
+        result.rows.forEach { console.log(it.doc?.description ?: "no desc") }
+        result
     }
 
     // Find set of all possible edges
@@ -188,37 +154,40 @@ fun proposeEdges(db: PouchDB) {
 
 private val DB_NAME = "http://localhost:5984/ranking"
 
-private fun initDB(): PouchDB {
-    val db: PouchDB = resetDB()
-    addDummyData(db)
-    return db
+private fun initDB(): Pair<PouchDB, Promise<dynamic>> {
+    val (db, promise) = resetDB()
+    return Pair(db, promise.then { addDummyData(db) })
 }
 
-private fun resetDB(): PouchDB {
+private fun resetDB(): Pair<PouchDB, Promise<dynamic>> {
     (PouchDB(DB_NAME)).destroy()
     val db: PouchDB = PouchDB(DB_NAME)
 
-    db.info().then { console.log(it) }
-    return db
+    val promise = db.info().then { console.log(it) }
+    return Pair(db, promise)
 }
 
-private fun addDummyData(db: PouchDB) {
+private fun addDummyData(db: PouchDB): Promise<dynamic> {
     var readNode = node("read").apply {
         description = "Investigate stuff";
     }
-    db.put(readNode)
     var sighNode = node("sigh").apply {
         description = "Be frustrated at difficulty of new stuff";
     }
-    db.put(sighNode)
     var grumpNode = node("grump").apply {
         description = "Grumble to self about difficulty of new stuff";
     }
-    db.put(sighNode)
     var edge1 = edge("edge1").apply {
         axis_id = "Dependency";
         from = readNode._id;
         to = sighNode._id;
     }
-    db.put(edge1)
+    //TODO 2016-03-29 HughG: Use bulkDocs?  This was an experiment in chaining.
+    return db.put(readNode).then {
+        db.put(sighNode)
+    }.then {
+        db.put(grumpNode)
+    }.then {
+        db.put(edge1)
+    }
 }
