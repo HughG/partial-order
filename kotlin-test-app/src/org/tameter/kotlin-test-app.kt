@@ -12,14 +12,15 @@ import kotlin.browser.document
     https://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html
  */
 
-// NOTE 2016-03-29 HughG: This doesn't work as an interface in compile-to-JS: catchAndLog isn't in the output.
 @native
 abstract class Promise<T> {
-    fun then(result: (T) -> T): Promise<T>
+    @native("then") fun <U> thenV(result: (T) -> U): Promise<U>
+    @native("then") fun <U> thenP(result: (T) -> Promise<U>): Promise<U>
     fun catch(error: (T) -> Unit): Unit
-    fun catchAndLog(): Unit {
-        catch { console.log(it) }
-    }
+}
+
+fun <T> Promise<T>.catchAndLog(): Unit {
+    catch { console.log(it) }
 }
 
 @native
@@ -65,7 +66,12 @@ open class PouchDB(var name: String, var options: JSMap<dynamic> = JSMap())
 }
 
 @native("Object")
-abstract class JSObject {
+open class JSObject {
+}
+
+fun jsobject(init: dynamic.() -> Unit): dynamic {
+    val result = JSObject()
+    return result.apply(init)
 }
 
 @native("Object")
@@ -78,7 +84,7 @@ class JSMap<T> {
 }
 
 @native("Object")
-abstract class PouchDoc() : JSObject() {
+open class PouchDoc() : JSObject() {
     var _id: String = noImpl
     var type: String = noImpl
 }
@@ -128,27 +134,58 @@ fun main(args: Array<String>) {
 
     val (db, promise) = initDB()
 
-    promise.then {
+    promise.thenP {
         proposeEdges(db)
     }.catchAndLog()
 }
 
 fun proposeEdges(db: PouchDB): Promise<dynamic> {
+    val allPossibleEdges: MutableCollection<Edge> = mutableListOf<Edge>()
+
     // Read all nodes and edges
-    val allNodesOptions = JSMap<dynamic>().apply {
-        this["startkey"] = "Node_"
-        this["endkey"] = "Node_\uffff"
-        this["include_docs"] = true
-    }
-    console.log(allNodesOptions)
-    return db.allDocs<Node>(allNodesOptions).then { result ->
-        console.log(result)
-        result.rows.forEach { console.log(it.doc?.description ?: "no desc") }
-        result
+    return db.allDocs<Node>(jsobject {
+        startkey = "Node_"
+        endkey = "Node_\uffff"
+        include_docs = true
+    }).thenV {
+//        console.log(it)
+        it.rows.forEach { console.log(it.doc?.description ?: "no desc") }
+        it
+    }.thenV {
+        val nodes = it.rows.mapNotNull { it.doc }
+        // Find set of all possible edges
+        for (from in nodes) {
+            for (to in nodes) {
+                allPossibleEdges.add(edge("from_${from._id}_to_${to._id}").apply {
+                    this.from = from._id
+                    this.to = to._id
+                })
+            }
+        }
+        console.log("Possible Edges:")
+        allPossibleEdges.forEach { console.log(it) }
+        it
+    }.thenP {
+        // Remove existing edges
+        db.allDocs<Edge>(jsobject {
+            startkey = "Edge_"
+            endkey = "Edge_\uffff"
+            include_docs = true
+        })
+    }.thenV {
+        val edges = it.rows.mapNotNull { it.doc }
+        console.log("Actual Edges:")
+        edges.forEach { console.log(it) }
+        allPossibleEdges.removeAll { possibleE ->
+            edges.any { actualE ->
+                actualE.from == possibleE.from &&
+                        actualE.to == possibleE.to
+            }
+        }
+        console.log("Remaining Edges:")
+        allPossibleEdges.forEach { console.log(it) }
     }
 
-    // Find set of all possible edges
-    // Remove existing edges
     // Return result
 }
 
@@ -156,14 +193,14 @@ private val DB_NAME = "http://localhost:5984/ranking"
 
 private fun initDB(): Pair<PouchDB, Promise<dynamic>> {
     val (db, promise) = resetDB()
-    return Pair(db, promise.then { addDummyData(db) })
+    return Pair(db, promise.thenP { addDummyData(db) })
 }
 
 private fun resetDB(): Pair<PouchDB, Promise<dynamic>> {
     (PouchDB(DB_NAME)).destroy()
     val db: PouchDB = PouchDB(DB_NAME)
 
-    val promise = db.info().then { console.log(it) }
+    val promise = db.info().thenV { console.log(it) }
     return Pair(db, promise)
 }
 
@@ -183,11 +220,11 @@ private fun addDummyData(db: PouchDB): Promise<dynamic> {
         to = sighNode._id;
     }
     //TODO 2016-03-29 HughG: Use bulkDocs?  This was an experiment in chaining.
-    return db.put(readNode).then {
+    return db.put(readNode).thenP {
         db.put(sighNode)
-    }.then {
+    }.thenP {
         db.put(grumpNode)
-    }.then {
+    }.thenP {
         db.put(edge1)
     }
 }
