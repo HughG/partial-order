@@ -26,35 +26,30 @@ class PouchDB(var name: String, var options: Map<String, dynamic>)
     fun get(id: String): Promise0 = noImpl
 }
 
-@native
-open class Object {
-    @nativeGetter
-    fun get(prop: String): dynamic = noImpl
+abstract class JSObject {
+    companion object {
+        protected fun <T> initObject(obj: T, init: T.() -> Unit): T {
+            obj.init()
+            return obj
+        }
+    }
+}
 
-    @nativeSetter
-    fun set(prop: String, value: dynamic) {}
+abstract class PouchDoc() : JSObject() {
+    var _id: String = noImpl
 }
 
 @native("Object")
-open class PouchDoc(val _id: String = noImpl) : Object() {}
-
-@native("Object")
 class Kitten(
-        _id: String,
         var name: String = noImpl,
         var occupation: String = noImpl,
         var age: Int = noImpl,
         var hobbies: Array<String> = noImpl
-) : PouchDoc(_id) {
-
+) : PouchDoc() {
+    companion object Factory {
+        fun new(init: Kitten.() -> Unit): Kitten = initObject(Kitten(), init)
+    }
 }
-
-fun <T: Object> initObject(obj: T, init: T.() -> Unit): T {
-    obj.init()
-    return obj
-}
-
-fun kitten(_id: String, init: Kitten.() -> Unit): Kitten = initObject(Kitten(_id), init)
 
 fun main(args: Array<String>) {
 //    console.log("Setting email ...")
@@ -64,8 +59,8 @@ fun main(args: Array<String>) {
 
     db.info().then({ console.log(it) })
 
-    var doc = kitten("mittens") {
-//        _id = "mittens",
+    var doc = Kitten().apply {
+        _id = "mittens";
         name = "Mittens";
         occupation = "kitten";
         age = 3;
@@ -76,30 +71,19 @@ fun main(args: Array<String>) {
         );
     }
 
-//    var doc: dynamic;
-//    doc._id = "mittens",
-//            name = "Mittens",
-//            occupation = "kitten",
-//            age = 3,
-//            hobbies = arrayOf(
-//                    "playing with balls of yarn",
-//                    "chasing laser pointers",
-//                    "lookin' hella cute"
-//            )
-//    )
     console.log(doc)
     db.put(doc)
 
-//    db.get("mittens").then(fun(doc): dynamic {
-//        // update their age
-//        doc.age = 4
-//        // put them back
-//        return db.put(doc)
-//    }).then(fun(doc): dynamic {
-//        // fetch mittens again
-//        return db.get("mittens")
-//    }).then(fun(doc): dynamic {
-//        console.log(doc);
-//        return null;
-//    });
+    db.get("mittens").then(fun(doc): dynamic {
+        // update their age
+        doc.age = 4
+        // put them back
+        return db.put(doc)
+    }).then(fun(doc): dynamic {
+        // fetch mittens again
+        return db.get("mittens")
+    }).then(fun(doc): dynamic {
+        console.log(doc);
+        return null;
+    });
 }
