@@ -1,6 +1,5 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.kpouchdb.PouchDoc
 import org.tameter.kpouchdb.initPouchDoc
 
 /**
@@ -8,11 +7,13 @@ import org.tameter.kpouchdb.initPouchDoc
  */
 
 @native("Object")
-class Node : PouchDoc() {
+class Node(graph: Graph) : GraphElement(graph) {
     var description: String
-
+    fun outgoing(): Set<Edge> {
+        return graph.edges.filter { it.from._id == _id }.toSet()
+    }
 }
 
-fun Node(_id: String): Node {
-    return initPouchDoc(Node(), "N", _id)
+fun Node(graph: Graph, _id: String): Node {
+    return initPouchDoc(Node(graph), "N", _id)
 }
