@@ -7,13 +7,10 @@ import org.tameter.kpouchdb.initPouchDoc
  */
 
 @native("Object")
-class Node(graph: Graph) : GraphElement(graph) {
+class NodeDoc() : GraphElementDoc() {
     var description: String
-    fun outgoing(): Set<Edge> {
-        return graph.edges.filter { it.from._id == _id }.toSet()
-    }
 }
 
-fun Node(graph: Graph, _id: String): Node {
-    return initPouchDoc(Node(graph), "N", _id)
+fun NodeDoc(_id: String): NodeDoc {
+    return initPouchDoc(NodeDoc(), "N", _id)
 }

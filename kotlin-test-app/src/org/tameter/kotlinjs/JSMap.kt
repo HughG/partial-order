@@ -1,5 +1,7 @@
 package org.tameter.kotlinjs
 
+import kotlin.reflect.KProperty
+
 /**
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
  *
@@ -13,4 +15,11 @@ open class JSMap<T> {
 
     @nativeSetter
     operator fun set(key: String, value: T): Unit = noImpl
+
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
+        return this[property.name]
+    }
+    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
+        this[property.name] = value
+    }
 }

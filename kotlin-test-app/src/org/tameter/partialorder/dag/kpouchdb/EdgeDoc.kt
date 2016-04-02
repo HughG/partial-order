@@ -3,14 +3,14 @@ package org.tameter.partialorder.dag
 import org.tameter.kpouchdb.initPouchDoc
 
 @native("Object")
-class Edge(graph: Graph) : GraphElement(graph) {
+class EdgeDoc() : GraphElementDoc() {
 //    var axis_id: String
-    var from: Node
-    var to: Node
+    var from: String
+    var to: String
 }
 
-fun Edge(graph: Graph, from: Node, to: Node): Edge {
-    return initPouchDoc(Edge(graph), "E", "f_${from._id}_t_${to._id}").apply {
+fun EdgeDoc(from: String, to: String): EdgeDoc {
+    return initPouchDoc(EdgeDoc(), "E", "f_${from}_t_${to}").apply {
         this.from = from
         this.to = to
     }

@@ -9,6 +9,7 @@ import org.tameter.kotlinjs.Object
 @native("Object")
 open class PouchDoc() : Object() {
     var _id: String = noImpl
+    var rev: String? = noImpl
     var type: String = noImpl
 }
 

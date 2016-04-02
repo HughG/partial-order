@@ -1,17 +1,45 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.kpouchdb.initPouchDoc
+import org.tameter.kotlinjs.makeGuid
+import org.tameter.kotlinjs.promise.Promise
+import org.tameter.kpouchdb.PouchDB
+import kotlin.reflect.KProperty
 
-@native("Object")
-class Edge(graph: Graph) : GraphElement(graph) {
-//    var axis_id: String
-    var from: Node
-    var to: Node
+class NodeFromDocs() {
+    operator fun getValue(thisRef: Edge, property: KProperty<*>): Node {
+        val name = property.name
+        val id: String = thisRef.doc[name]
+        thisRef.graph.nodes.find { it.doc._id == id }
+                ?: throw Exception("No '${name}' node ${id}")
+    }
+//    operator fun setValue(thisRef: Edge, property: KProperty<*>, value: Node) {
+//        thisRef.doc[property.name] = value.doc._id
+//    }
 }
 
-fun Edge(graph: Graph, from: Node, to: Node): Edge {
-    return initPouchDoc(Edge(graph), "E", "f_${from._id}_t_${to._id}").apply {
-        this.from = from
-        this.to = to
+@native("Object")
+class Edge(
+    graph: Graph,
+    doc: EdgeDoc
+) : GraphElement<EdgeDoc>(graph, doc) {
+//    var axis_id: String
+    val from: Node by NodeFromDocs()
+    val to: Node by NodeFromDocs()
+}
+
+fun Edge(
+        graph: Graph,
+        db: PouchDB,
+        from: Node,
+        to: Node
+): Promise<Edge> {
+    val doc = EdgeDoc(from.doc._id, to.doc._id)
+    return db.put(doc).thenV { result ->
+        if (!result.ok) {
+            throw Exception("Failed to store ${doc}")
+        }
+        // Update rev to match DB, otherwise we won't be able to store any changes later.
+        doc.rev = result.rev
+        Edge(graph, doc)
     }
 }
