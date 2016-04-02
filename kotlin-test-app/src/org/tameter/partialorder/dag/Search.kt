@@ -31,13 +31,13 @@ fun Graph.search(
             index, depth, node, prevEdge, prevNode -> VisitResult.Continue
         }
 ): SearchResult {
-    var queue = mutableListOf<Node>();
-    var connectedNodes = mutableListOf<Node>();
-    var connectedBy = mutableMapOf<String, Edge>();
-    var id2depth = mutableMapOf<String, Int>();
-    var visited = mutableSetOf<String>();
-    var index = 0;
-    var found: Node? = null;
+    var queue = mutableListOf<Node>()
+    var connectedNodes = mutableListOf<Node>()
+    var connectedBy = mutableMapOf<String, Edge>()
+    var id2depth = mutableMapOf<String, Int>()
+    var visited = mutableSetOf<String>()
+    var index = 0
+    var found: Node? = null
 
     // enqueue v
     for (root in roots) {
@@ -57,14 +57,14 @@ fun Graph.search(
 
         if (searchType == SearchType.DepthFirst) {
             if (visited.add(v._id)) {
-                connectedNodes.add(connectedNodes.size, v);
+                connectedNodes.add(connectedNodes.size, v)
             }
         }
 
-        var depth = id2depth[v._id];
-        var prevEdge = connectedBy[v._id];
+        var depth = id2depth[v._id]!!
+        var prevEdge = connectedBy[v._id]
         var prevNode = prevEdge?.from
-        var ret = fn(index++, depth!!, v, prevEdge, prevNode);
+        var ret = fn(index++, depth, v, prevEdge, prevNode)
         if (ret == VisitResult.Return) {
             found = v
             break
@@ -92,11 +92,11 @@ fun Graph.search(
     var connectedEles = mutableListOf<Edge>()
 
     for (node in connectedNodes) {
-        var edge = connectedBy[node._id];
+        var edge = connectedBy[node._id]
         if (edge != null) {
             connectedEles.add(edge)
         }
     }
 
     return SearchResult(connectedEles, found)
-};
+}

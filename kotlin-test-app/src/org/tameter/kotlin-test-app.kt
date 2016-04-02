@@ -4,7 +4,11 @@ import org.tameter.kotlinjs.jsobject
 import org.tameter.kotlinjs.promise.Promise
 import org.tameter.kotlinjs.promise.catchAndLog
 import org.tameter.kpouchdb.PouchDB
-import org.tameter.partialorder.dag.*
+import org.tameter.partialorder.dag.Edge
+import org.tameter.partialorder.dag.Graph
+import org.tameter.partialorder.dag.Node
+import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
+import org.tameter.partialorder.dag.kpouchdb.NodeDoc
 
 fun main(args: Array<String>) {
     initDB().thenP { db ->
@@ -61,7 +65,7 @@ fun loadGraph(db: PouchDB): Promise<Graph> {
 }
 
 fun proposeEdges(graph: Graph): Collection<Edge> {
-    val allPossibleEdges: MutableCollection<Edge> = mutableListOf()
+    val graphClone = Graph().apply { graph.nodes.forEach { nodes.add(Node(this, it)) } }
 
     // Find set of all possible edges
     for (from in graph.nodes) {
@@ -69,23 +73,34 @@ fun proposeEdges(graph: Graph): Collection<Edge> {
             // TODO 2016-04-01 HughG: Really, to avoid cycles I have to filter out all edges for which there is already
             // a path from "to" to "from", not just self-edges.
             if (from !== to) {
-                allPossibleEdges.add(Edge(graph, from, to))
+                graphClone.edges.add(Edge(graphClone, from, to))
             }
         }
     }
     console.log("Possible Edges:")
-    allPossibleEdges.forEach { console.log(it.toString()) }
+    graphClone.edges.forEach { console.log(it.toString()) }
 
     // TODO 2016-04-01 HughG: Would be quicker to just avoid adding these edges in the first place :-)
-    allPossibleEdges.removeAll { possibleE ->
+    graphClone.edges.removeAll { possibleE ->
         graph.edges.any { actualE ->
-            actualE.from == possibleE.from &&
+            console.log("  Comparing")
+            console.log("    from")
+            console.log("      ${actualE.from}")
+            console.log("      ${possibleE.from}")
+            console.log("    to")
+            console.log("      ${actualE.to}")
+            console.log("      ${possibleE.to}")
+            val result = actualE.from == possibleE.from &&
                     actualE.to == possibleE.to
+            if (result) {
+                console.log("Removing ${actualE.toString()}: match with ${possibleE.toString()}")
+            }
+            result
         }
     }
     console.log("Remaining Edges:")
-    allPossibleEdges.forEach { console.log(it.toString()) }
+    graphClone.edges.forEach { console.log(it.toString()) }
 
     // Return result
-    return allPossibleEdges
+    return graphClone.edges
 }

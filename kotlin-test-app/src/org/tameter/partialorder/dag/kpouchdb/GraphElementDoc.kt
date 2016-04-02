@@ -1,4 +1,4 @@
-package org.tameter.partialorder.dag
+package org.tameter.partialorder.dag.kpouchdb
 
 import org.tameter.kpouchdb.PouchDoc
 

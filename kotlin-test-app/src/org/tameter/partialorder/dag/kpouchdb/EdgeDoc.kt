@@ -1,4 +1,4 @@
-package org.tameter.partialorder.dag
+package org.tameter.partialorder.dag.kpouchdb
 
 import org.tameter.kpouchdb.initPouchDoc
 
@@ -14,4 +14,8 @@ fun EdgeDoc(from: String, to: String): EdgeDoc {
         this.from = from
         this.to = to
     }
+}
+
+fun EdgeDoc(doc: EdgeDoc): EdgeDoc {
+    return EdgeDoc(doc.from, doc.to)
 }

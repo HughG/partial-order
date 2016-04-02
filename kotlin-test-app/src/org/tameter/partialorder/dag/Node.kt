@@ -4,6 +4,8 @@ import org.tameter.kotlinjs.JSMapDelegate
 import org.tameter.kotlinjs.makeGuid
 import org.tameter.kotlinjs.promise.Promise
 import org.tameter.kpouchdb.PouchDB
+import org.tameter.partialorder.dag.kpouchdb.NodeDoc
+import org.tameter.partialorder.dag.kpouchdb.toStringForNative
 
 /**
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
@@ -26,6 +28,10 @@ class Node(
     override fun toString(): String{
         return "Node(dscr ${description}, doc ${doc.toStringForNative()})"
     }
+
+    override fun toPrettyString(): String {
+        return "{${_id} ${description}}"
+    }
 }
 
 fun Node(
@@ -38,6 +44,11 @@ fun Node(
     val node = Node(graph, doc)
 //    console.log(node.toString())
     return node
+}
+
+// Copy constructor (also copies the doc)
+fun Node(graph: Graph, node: Node): Node {
+    return Node(graph, NodeDoc(node.doc))
 }
 
 fun Node.store(

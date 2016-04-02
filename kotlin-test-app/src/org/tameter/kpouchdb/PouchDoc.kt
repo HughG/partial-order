@@ -24,3 +24,10 @@ fun <T : PouchDoc> initPouchDoc(doc: T, type: String, _id: String): T {
 fun PouchDoc.toStringForNative(): String {
     return "{_id: ${_id}, type: ${type}, rev: ${rev}}"
 }
+
+fun PouchDoc.copyFrom(other: PouchDoc): PouchDoc {
+    _id = other._id
+    type = other.type
+    rev = other.rev
+    return this
+}

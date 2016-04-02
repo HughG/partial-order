@@ -2,6 +2,7 @@ package org.tameter.partialorder.dag
 
 import org.tameter.kotlinjs.promise.Promise
 import org.tameter.kpouchdb.PouchDB
+import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 import kotlin.reflect.KProperty
 
 class NodeFromDocs() {
@@ -20,16 +21,20 @@ class Edge(
     graph: Graph,
     doc: EdgeDoc
 ) : GraphElement<EdgeDoc>(graph, doc) {
-//    var axis_id: String
+    //    var axis_id: String
     val from: Node by NodeFromDocs()
-    val to: Node by NodeFromDocs()
 
+    val to: Node by NodeFromDocs()
     init {
         graph.edges.add(this)
     }
 
     override fun toString(): String{
         return "Edge(from ${from}, to ${to}, doc ${doc.toString()})"
+    }
+
+    override fun toPrettyString(): String {
+        return "Edge ${from.toPrettyString()} to ${to.toPrettyString()}"
     }
 }
 
@@ -42,6 +47,11 @@ fun Edge(
     val edge = Edge(graph, doc)
 //    console.log(edge.toString())
     return edge
+}
+
+// Copy constructor (also copies the doc)
+fun Edge(graph: Graph, edge: Edge): Edge {
+    return Edge(graph, EdgeDoc(edge.doc))
 }
 
 fun Edge.store(

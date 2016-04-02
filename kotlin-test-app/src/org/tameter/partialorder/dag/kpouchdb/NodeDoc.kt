@@ -1,4 +1,4 @@
-package org.tameter.partialorder.dag
+package org.tameter.partialorder.dag.kpouchdb
 
 import org.tameter.kpouchdb.PouchDoc
 import org.tameter.kpouchdb.initPouchDoc
@@ -15,6 +15,12 @@ class NodeDoc() : GraphElementDoc() {
 
 fun NodeDoc(_id: String): NodeDoc {
     return initPouchDoc(NodeDoc(), "N", _id)
+}
+
+fun NodeDoc(doc: NodeDoc): NodeDoc {
+    return (NodeDoc(doc._id)).apply {
+        description = doc.description
+    }
 }
 
 // We can't just override toString, because that won't be emitted, because the class is @native.
