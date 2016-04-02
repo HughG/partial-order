@@ -5,13 +5,13 @@ package org.tameter.partialorder.dag
  */
 
 class Graph {
-    val nodes: MutableSet<Node> = mutableSetOf()
-    val edges: MutableSet<Edge> = mutableSetOf()
+    val nodes: MutableSet<GraphNode> = mutableSetOf()
+    val edges: MutableSet<GraphEdge> = mutableSetOf()
 
     fun deepClone(): Graph {
         val g = Graph()
-        nodes.forEach { g.nodes.add(Node(g, it)) }
-        edges.forEach { g.edges.add(Edge(g, it)) }
+        nodes.forEach { g.nodes.add(GraphNode(g, it)) }
+        edges.forEach { g.edges.add(GraphEdge(g, it)) }
         return g
     }
 }

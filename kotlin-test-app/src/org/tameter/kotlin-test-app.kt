@@ -6,7 +6,8 @@ import org.tameter.kotlinjs.promise.catchAndLog
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.Edge
 import org.tameter.partialorder.dag.Graph
-import org.tameter.partialorder.dag.Node
+import org.tameter.partialorder.dag.GraphEdge
+import org.tameter.partialorder.dag.GraphNode
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
 
@@ -33,9 +34,12 @@ fun loadGraph(db: PouchDB): Promise<Graph> {
         console.log(it)
         it.rows.forEach {
             var node: NodeDoc? = it.doc
-            console.log(node?.description ?: "no desc")
-            if (node != null) {
-                g.nodes.add(Node(g, node))
+            if (node == null) {
+                console.log("No node doc in ${it}")
+            } else {
+                val graphNode = GraphNode(g, node)
+                console.log(graphNode.toPrettyString())
+                g.nodes.add(graphNode)
             }
         }
         it
@@ -51,9 +55,12 @@ fun loadGraph(db: PouchDB): Promise<Graph> {
         console.log(it)
         it.rows.forEach {
             var edge: EdgeDoc? = it.doc
-            console.log(edge?._id ?: "no ID")
-            if (edge != null) {
-                g.edges.add(Edge(g, edge))
+            if (edge == null) {
+                console.log("No edge doc in ${it}")
+            } else {
+                val graphEdge = GraphEdge(g, edge)
+                console.log(graphEdge.toPrettyString())
+                g.edges.add(graphEdge)
             }
         }
 
@@ -65,7 +72,7 @@ fun loadGraph(db: PouchDB): Promise<Graph> {
 }
 
 fun proposeEdges(graph: Graph): Collection<Edge> {
-    val graphClone = Graph().apply { graph.nodes.forEach { nodes.add(Node(this, it)) } }
+    val allPossibleEdges = mutableSetOf<Edge>()
 
     // Find set of all possible edges
     for (from in graph.nodes) {
@@ -73,34 +80,33 @@ fun proposeEdges(graph: Graph): Collection<Edge> {
             // TODO 2016-04-01 HughG: Really, to avoid cycles I have to filter out all edges for which there is already
             // a path from "to" to "from", not just self-edges.
             if (from !== to) {
-                graphClone.edges.add(Edge(graphClone, from, to))
+                allPossibleEdges.add(Edge(from, to))
             }
         }
     }
     console.log("Possible Edges:")
-    graphClone.edges.forEach { console.log(it.toString()) }
+    allPossibleEdges.forEach { console.log(it.toPrettyString()) }
 
     // TODO 2016-04-01 HughG: Would be quicker to just avoid adding these edges in the first place :-)
-    graphClone.edges.removeAll { possibleE ->
+    allPossibleEdges.removeAll { possibleE ->
         graph.edges.any { actualE ->
-            console.log("  Comparing")
-            console.log("    from")
-            console.log("      ${actualE.from}")
-            console.log("      ${possibleE.from}")
-            console.log("    to")
-            console.log("      ${actualE.to}")
-            console.log("      ${possibleE.to}")
-            val result = actualE.from == possibleE.from &&
-                    actualE.to == possibleE.to
+//            console.log("  Comparing")
+//            console.log("    from")
+//            console.log("      ${actualE.fromId}")
+//            console.log("      ${possibleE.fromId}")
+//            console.log("    to")
+//            console.log("      ${actualE.toId}")
+//            console.log("      ${possibleE.toId}")
+            val result = (actualE == possibleE)
             if (result) {
-                console.log("Removing ${actualE.toString()}: match with ${possibleE.toString()}")
+                console.log("Removing ${possibleE.toPrettyString()}: match with ${actualE.toPrettyString()}")
             }
             result
         }
     }
     console.log("Remaining Edges:")
-    graphClone.edges.forEach { console.log(it.toString()) }
+    allPossibleEdges.forEach { console.log(it.toPrettyString()) }
 
     // Return result
-    return graphClone.edges
+    return allPossibleEdges
 }

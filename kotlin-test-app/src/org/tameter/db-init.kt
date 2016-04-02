@@ -2,9 +2,9 @@ package org.tameter
 
 import org.tameter.kotlinjs.promise.Promise
 import org.tameter.kpouchdb.PouchDB
-import org.tameter.partialorder.dag.Edge
 import org.tameter.partialorder.dag.Graph
-import org.tameter.partialorder.dag.Node
+import org.tameter.partialorder.dag.GraphEdge
+import org.tameter.partialorder.dag.GraphNode
 
 private val DB_NAME = "http://localhost:5984/ranking"
 
@@ -27,14 +27,14 @@ private fun resetDB(): Promise<PouchDB> {
 
 private fun addDummyData(db: PouchDB): Promise<PouchDB> {
     val g: Graph = Graph()
-    var readNode = Node(g, "Investigate stuff")
-    var sighNode = Node(g, "Be frustrated at difficulty of new stuff")
-    var grumpNode = Node(g, "Grumble to self about difficulty of new stuff")
-    var us1Node = Node(g, "Understand Promises better")
-    var edge1 = Edge(g, readNode, sighNode).apply {
+    var readNode = GraphNode(g, "Investigate stuff")
+    var sighNode = GraphNode(g, "Be frustrated at difficulty of new stuff")
+    var grumpNode = GraphNode(g, "Grumble to self about difficulty of new stuff")
+    var us1Node = GraphNode(g, "Understand Promises better")
+    var edge1 = GraphEdge(g, readNode, sighNode).apply {
         //axis_id = "Dependency";
     }
-    var edge2 = Edge(g, sighNode, us1Node).apply {
+    var edge2 = GraphEdge(g, sighNode, us1Node).apply {
         //axis_id = "Dependency";
     }
     return db.bulkDocs(arrayOf(

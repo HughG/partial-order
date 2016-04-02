@@ -12,5 +12,6 @@
       </option>
     </inspection_tool>
     <inspection_tool class="RemoveCurlyBracesFromTemplate" enabled="false" level="INFO" enabled_by_default="false" />
+    <inspection_tool class="UnusedSymbol" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
   </profile>
 </component>

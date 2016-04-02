@@ -11,44 +11,55 @@ import org.tameter.partialorder.dag.kpouchdb.toStringForNative
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
  */
 
-class Node(
-        graph: Graph,
+open class Node(
         doc: NodeDoc
-) : GraphElement<NodeDoc>(graph, doc) {
+) : DocWrapper<NodeDoc>(doc) {
     var description: String by JSMapDelegate(doc)
 
-    init {
-        graph.nodes.add(this)
+    // NOTE 2016-04-02 HughG: Normally polymorphic equals is wrong because it ends up being
+    // non-commutative.  However, in this case it's okay because the base class is abstract (so
+    // we'll never get any instances of just that class) and the subclasses don't add any state
+    // which is relevant to equality.
+
+    final override fun equals(other: Any?): Boolean{
+        if (this === other) return true
+
+        other as NodeDoc
+
+        if (description != other.description) return false
+
+        return super.equals(other)
     }
 
-    fun outgoing(): Set<Edge> {
-        return graph.edges.filter { it.from == this }.toSet()
+    final override fun hashCode(): Int{
+        var result = super.hashCode()
+        result += 31 * result + description.hashCode()
+        return result
     }
 
     override fun toString(): String{
-        return "Node(dscr ${description}, doc ${doc.toStringForNative()})"
+        return "GraphNode(dscr ${description}, doc ${doc.toStringForNative()})"
     }
 
     override fun toPrettyString(): String {
-        return "{${_id} ${description}}"
+        return "{G ${_id} ${description}}"
     }
 }
 
 fun Node(
-        graph: Graph,
         description: String
 ): Node {
     val doc = NodeDoc(makeGuid()).apply {
         this.description = description
     }
-    val node = Node(graph, doc)
+    val node = Node(doc)
 //    console.log(node.toString())
     return node
 }
 
 // Copy constructor (also copies the doc)
-fun Node(graph: Graph, node: Node): Node {
-    return Node(graph, NodeDoc(node.doc))
+fun Node(node: Node): Node {
+    return Node(NodeDoc(node.doc))
 }
 
 fun Node.store(

@@ -5,17 +5,17 @@ import org.tameter.kpouchdb.initPouchDoc
 @native("Object")
 class EdgeDoc() : GraphElementDoc() {
 //    var axis_id: String
-    var from: String
-    var to: String
+    var fromId: String
+    var toId: String
 }
 
 fun EdgeDoc(from: String, to: String): EdgeDoc {
     return initPouchDoc(EdgeDoc(), "E", "f_${from}_t_${to}").apply {
-        this.from = from
-        this.to = to
+        this.fromId = from
+        this.toId = to
     }
 }
 
 fun EdgeDoc(doc: EdgeDoc): EdgeDoc {
-    return EdgeDoc(doc.from, doc.to)
+    return EdgeDoc(doc.fromId, doc.toId)
 }

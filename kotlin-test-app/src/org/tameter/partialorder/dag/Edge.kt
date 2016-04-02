@@ -1,57 +1,60 @@
 package org.tameter.partialorder.dag
 
+import org.tameter.kotlinjs.JSMapDelegate
 import org.tameter.kotlinjs.promise.Promise
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
-import kotlin.reflect.KProperty
 
-class NodeFromDocs() {
-    operator fun getValue(thisRef: Edge, property: KProperty<*>): Node {
-        val name = property.name
-        val id: String = thisRef.doc[name]
-        return thisRef.graph.nodes.find { it._id == id }
-                ?: throw Exception("No '${name}' node ${id}")
-    }
-//    operator fun setValue(thisRef: Edge, property: KProperty<*>, value: Node) {
-//        thisRef.doc[property.name] = value.doc._id
-//    }
-}
-
-class Edge(
-    graph: Graph,
+open class Edge(
     doc: EdgeDoc
-) : GraphElement<EdgeDoc>(graph, doc) {
+) : DocWrapper<EdgeDoc>(doc) {
     //    var axis_id: String
-    val from: Node by NodeFromDocs()
 
-    val to: Node by NodeFromDocs()
-    init {
-        graph.edges.add(this)
+    val fromId: String by JSMapDelegate(doc)
+    val toId: String by JSMapDelegate(doc)
+
+    // NOTE 2016-04-02 HughG: Normally polymorphic equals is wrong because it ends up being
+    // non-commutative.  However, in this case it's okay because the base class is abstract (so
+    // we'll never get any instances of just that class) and the subclasses don't add any state
+    // which is relevant to equality.
+
+    final override fun equals(other: Any?): Boolean{
+        if (this === other) return true
+
+        other as EdgeDoc
+
+        if (fromId != other.fromId) return false
+        if (toId != other.toId) return false
+
+        return super.equals(other)
+    }
+
+    final override fun hashCode(): Int{
+        var result = super.hashCode()
+        result += 31 * result + fromId.hashCode()
+        result += 31 * result + toId.hashCode()
+        return result
     }
 
     override fun toString(): String{
-        return "Edge(from ${from}, to ${to}, doc ${doc.toString()})"
+        return "Edge(from ${fromId}, to ${toId}, doc ${doc.toString()})"
     }
 
     override fun toPrettyString(): String {
-        return "Edge ${from.toPrettyString()} to ${to.toPrettyString()}"
+        return "Edge ${fromId} to ${toId}"
     }
 }
 
 fun Edge(
-        graph: Graph,
         from: Node,
         to: Node
 ): Edge {
-    val doc = EdgeDoc(from.doc._id, to.doc._id)
-    val edge = Edge(graph, doc)
-//    console.log(edge.toString())
-    return edge
+    return Edge(EdgeDoc(from.doc._id, to.doc._id))
 }
 
 // Copy constructor (also copies the doc)
-fun Edge(graph: Graph, edge: Edge): Edge {
-    return Edge(graph, EdgeDoc(edge.doc))
+fun Edge(edge: Edge): Edge {
+    return Edge(EdgeDoc(edge.doc))
 }
 
 fun Edge.store(
