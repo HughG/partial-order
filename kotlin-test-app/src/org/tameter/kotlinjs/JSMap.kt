@@ -15,11 +15,20 @@ open class JSMap<T> {
 
     @nativeSetter
     operator fun set(key: String, value: T): Unit = noImpl
+}
 
+/**
+ * These methods can't be on JSMap directly otherwise they're not emitted into the JavaScript,
+ * because that's a @native class.
+ */
+class JSMapDelegate<T>(
+        val map: JSMap<T>
+) {
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
-        return this[property.name]
+        return map[property.name]
     }
     operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
-        this[property.name] = value
+        map[property.name] = value
     }
+
 }

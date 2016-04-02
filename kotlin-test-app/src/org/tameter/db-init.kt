@@ -27,11 +27,11 @@ private fun resetDB(): Promise<PouchDB> {
 
 private fun addDummyData(db: PouchDB): Promise<PouchDB> {
     val g: Graph = Graph()
-    var readNode = Node(g, db, "Investigate stuff")
-    var sighNode = Node(g, db, "Be frustrated at difficulty of new stuff")
-    var grumpNode = Node(g, db, "Grumble to self about difficulty of new stuff")
-    var us1Node = Node(g, db, "Understand Promises better")
-    var edge1 = Edge(g, db, readNode, sighNode).apply {
+    var readNode = Node(g, "Investigate stuff")
+    var sighNode = Node(g, "Be frustrated at difficulty of new stuff")
+    var grumpNode = Node(g, "Grumble to self about difficulty of new stuff")
+    var us1Node = Node(g, "Understand Promises better")
+    var edge1 = Edge(g, readNode, sighNode).apply {
         //axis_id = "Dependency";
     }
     var edge2 = Edge(g, sighNode, us1Node).apply {
@@ -44,7 +44,7 @@ private fun addDummyData(db: PouchDB): Promise<PouchDB> {
             us1Node,
             edge1,
             edge2
-    )).thenV { results ->
+    ).map { it.doc }.toTypedArray()).thenV { results ->
         console.log("Bulk store results:")
         results.forEach { console.log(it) }
         db

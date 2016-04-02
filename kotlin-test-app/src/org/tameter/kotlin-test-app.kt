@@ -4,9 +4,7 @@ import org.tameter.kotlinjs.jsobject
 import org.tameter.kotlinjs.promise.Promise
 import org.tameter.kotlinjs.promise.catchAndLog
 import org.tameter.kpouchdb.PouchDB
-import org.tameter.partialorder.dag.Edge
-import org.tameter.partialorder.dag.Graph
-import org.tameter.partialorder.dag.Node
+import org.tameter.partialorder.dag.*
 
 fun main(args: Array<String>) {
     initDB().thenP { db ->
@@ -19,39 +17,43 @@ fun main(args: Array<String>) {
 fun loadGraph(db: PouchDB): Promise<Graph> {
     val g: Graph = Graph()
 
+    console.log("Loading graph ...")
+
     // Load nodes
-    return db.allDocs<Node>(jsobject {
+    return db.allDocs<NodeDoc>(jsobject {
         startkey = "N_"
         endkey = "N_\uffff"
         include_docs = true
     }).thenV {
+        console.log("Nodes:")
         console.log(it)
         it.rows.forEach {
-            var node: Node? = it.doc
+            var node: NodeDoc? = it.doc
             console.log(node?.description ?: "no desc")
             if (node != null) {
-                node.graph = g
-                g.nodes.add(node)
+                g.nodes.add(Node(g, node))
             }
         }
         it
     }.thenP {
         // Load edges
-        db.allDocs<Edge>(jsobject {
+        db.allDocs<EdgeDoc>(jsobject {
             startkey = "E_"
             endkey = "E_\uffff"
             include_docs = true
         })
     }.thenV {
+        console.log("Edges:")
         console.log(it)
         it.rows.forEach {
-            var edge: Edge? = it.doc
+            var edge: EdgeDoc? = it.doc
             console.log(edge?._id ?: "no ID")
             if (edge != null) {
-                edge.graph = g
-                g.edges.add(edge)
+                g.edges.add(Edge(g, edge))
             }
         }
+
+        console.log("Loading graph ... done.")
 
         // Return result
         g
@@ -72,7 +74,7 @@ fun proposeEdges(graph: Graph): Collection<Edge> {
         }
     }
     console.log("Possible Edges:")
-    allPossibleEdges.forEach { console.log(it) }
+    allPossibleEdges.forEach { console.log(it.toString()) }
 
     // TODO 2016-04-01 HughG: Would be quicker to just avoid adding these edges in the first place :-)
     allPossibleEdges.removeAll { possibleE ->
@@ -82,7 +84,7 @@ fun proposeEdges(graph: Graph): Collection<Edge> {
         }
     }
     console.log("Remaining Edges:")
-    allPossibleEdges.forEach { console.log(it) }
+    allPossibleEdges.forEach { console.log(it.toString()) }
 
     // Return result
     return allPossibleEdges
