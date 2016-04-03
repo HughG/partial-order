@@ -12,7 +12,7 @@ class GraphNode(
         doc: NodeDoc
 ) : Node(doc) {
     init {
-        graph.nodes.add(this)
+        graph.addNode(this)
     }
 
     fun outgoing(): Set<GraphEdge> {

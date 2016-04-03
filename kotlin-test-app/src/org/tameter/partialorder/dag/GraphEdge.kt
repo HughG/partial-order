@@ -29,8 +29,7 @@ class GraphEdge(
         from
         to
         // Safe to add to the graph, now that we know the nodes exist.
-        graph.edges.add(this)
-        // TODO 2016-04-02 HughG: Not properly safe, because someone could remove nodes later.
+        graph.addEdge(this)
     }
 
     override fun toString(): String{

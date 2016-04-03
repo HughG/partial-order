@@ -39,7 +39,7 @@ fun loadGraph(db: PouchDB): Promise<Graph> {
             } else {
                 val graphNode = GraphNode(g, node)
                 console.log(graphNode.toPrettyString())
-                g.nodes.add(graphNode)
+                g.addNode(graphNode)
             }
         }
         it
@@ -60,7 +60,7 @@ fun loadGraph(db: PouchDB): Promise<Graph> {
             } else {
                 val graphEdge = GraphEdge(g, edge)
                 console.log(graphEdge.toPrettyString())
-                g.edges.add(graphEdge)
+                g.addEdge(graphEdge)
             }
         }
 
@@ -72,40 +72,55 @@ fun loadGraph(db: PouchDB): Promise<Graph> {
 }
 
 fun proposeEdges(graph: Graph): Collection<Edge> {
+    // Map from a node to all the nodes which have a path to it.
     val allPossibleEdges = mutableSetOf<Edge>()
 
     // Find set of all possible edges
     for (from in graph.nodes) {
         for (to in graph.nodes) {
-            // TODO 2016-04-01 HughG: Really, to avoid cycles I have to filter out all edges for which there is already
-            // a path from "to" to "from", not just self-edges.
-            if (from !== to) {
-                allPossibleEdges.add(Edge(from, to))
+            val possibleEdge = Edge(from, to)
+            if (!graph.hasPath(to, from) &&
+                    !graph.edges.contains(possibleEdge)
+//                    !graph.edges.any { it == possibleEdge }
+            ) {
+                allPossibleEdges.add(possibleEdge)
             }
         }
     }
-    console.log("Possible Edges:")
-    allPossibleEdges.forEach { console.log(it.toPrettyString()) }
 
-    // TODO 2016-04-01 HughG: Would be quicker to just avoid adding these edges in the first place :-)
-    allPossibleEdges.removeAll { possibleE ->
-        graph.edges.any { actualE ->
-//            console.log("  Comparing")
-//            console.log("    from")
-//            console.log("      ${actualE.fromId}")
-//            console.log("      ${possibleE.fromId}")
-//            console.log("    to")
-//            console.log("      ${actualE.toId}")
-//            console.log("      ${possibleE.toId}")
-            val result = (actualE == possibleE)
-            if (result) {
-                console.log("Removing ${possibleE.toPrettyString()}: match with ${actualE.toPrettyString()}")
-            }
-            result
-        }
+    fun String.truncateTo(targetLength: Int): String {
+        return if (length <= targetLength) this else substring(0, targetLength - 3) + "..."
     }
-    console.log("Remaining Edges:")
-    allPossibleEdges.forEach { console.log(it.toPrettyString()) }
+
+    console.log("Possible Edges:")
+    allPossibleEdges.forEach { edge ->
+        val fromNode: GraphNode = graph.nodes.find { it._id == edge.fromId }!!
+        val toNode: GraphNode = graph.nodes.find { it._id == edge.toId }!!
+        console.log(
+                edge.toPrettyString(),
+                "'${fromNode.description.truncateTo(15)}' -> '${toNode.description.truncateTo(15)}'"
+        )
+    }
+
+//    // TODO 2016-04-01 HughG: Would be quicker to just avoid adding these edges in the first place :-)
+//    allPossibleEdges.removeAll { possibleE ->
+//        graph.edges.any { actualE ->
+////            console.log("  Comparing")
+////            console.log("    from")
+////            console.log("      ${actualE.fromId}")
+////            console.log("      ${possibleE.fromId}")
+////            console.log("    to")
+////            console.log("      ${actualE.toId}")
+////            console.log("      ${possibleE.toId}")
+//            val result = (actualE == possibleE)
+//            if (result) {
+//                console.log("Removing ${possibleE.toPrettyString()}: match with ${actualE.toPrettyString()}")
+//            }
+//            result
+//        }
+//    }
+//    console.log("Remaining Edges:")
+//    allPossibleEdges.forEach { console.log(it.toPrettyString()) }
 
     // Return result
     return allPossibleEdges

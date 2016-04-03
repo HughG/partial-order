@@ -49,22 +49,33 @@ fun Graph.search(
         id2depth[root._id] = 0
     }
 
+//    console.log("Initial queue: ${queue.joinToString { it._id }}")
+//    console.log("Initial depths: ${id2depth.entries.joinToString()}")
+
     while (queue.size != 0) {
         var v = when (searchType) {
             SearchType.BreadthFirst -> queue.removeAt(0)
-            SearchType.DepthFirst -> queue.removeAt(queue.size)
+            SearchType.DepthFirst -> queue.removeAt(queue.size - 1)
         }
+
+//        console.log("Visiting ${v._id}")
 
         if (searchType == SearchType.DepthFirst) {
             if (visited.add(v._id)) {
+//                console.log("First visit to ${v._id}")
                 connectedNodes.add(connectedNodes.size, v)
+//                console.log("Added to connectedNodes ${v._id}")
             }
         }
 
-        var depth = id2depth[v._id]!!
+        var depthQ = id2depth[v._id]
+//        console.log("Depth for ${v._id} is ${depthQ}")
+        var depth = depthQ!!
         var prevEdge = connectedBy[v._id]
         var prevNode = prevEdge?.from
+//        console.log("fn(${index + 1}, ${depth}, ${v._id}, ${prevEdge?._id}, ${prevNode?._id})")
         var ret = fn(index++, depth, v, prevEdge, prevNode)
+//        console.log("fn returned ${ret.name}")
         if (ret == VisitResult.Return) {
             found = v
             break
@@ -74,6 +85,7 @@ fun Graph.search(
         }
 
         var vwEdges: Collection<GraphEdge> = v.outgoing()
+//        console.log("Enqueueing ${vwEdges.joinToString {it._id}}")
         for (e in vwEdges) {
             var w = e.to
             queue.add(queue.size, w)
@@ -81,6 +93,7 @@ fun Graph.search(
             if (searchType == SearchType.BreadthFirst) {
                 visited.add(w._id)
                 connectedNodes.add(connectedNodes.size, w)
+//                console.log("Added to connectedNodes ${w._id}")
             }
 
             connectedBy[w._id] = e
