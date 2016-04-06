@@ -33,6 +33,7 @@ private class CachedImpl<out T>(private val getValue: () -> T) : Cached<T> {
         get() {
             if (!initialized) {
                 _value = getValue()
+                initialized = true
             }
             // We don't do "_value!!" here because T might be something like "Int?"
             return _value as T

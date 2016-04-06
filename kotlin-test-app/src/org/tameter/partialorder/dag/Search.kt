@@ -98,7 +98,7 @@ fun Graph.search(
 
             connectedBy[w._id] = e
 
-            id2depth[w._id] = (id2depth[w._id] ?: 0) + 1
+            id2depth[w._id] = (id2depth[v._id] ?: 0) + 1
         }
     }
 
