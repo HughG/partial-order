@@ -43,14 +43,31 @@ class Graph {
 
 //        console.info("Caching paths ... done.")
 
-        hasPathFrom
+        hasPathFrom as Map<GraphNode, Collection<GraphNode>>
     }
-    private val hasPathFrom by cachedHasPathFrom
+    val hasPathFrom by cachedHasPathFrom
+
+    // Map from a node to all the nodes which have a path to it.
+    private val cachedRanks = cached {
+        val ranks = mutableMapOf<GraphNode, Int>()
+        console.log("Caching ranks ...")
+        search(SearchType.DepthFirst, roots) { index, depth, node, prevEdge, prevNode ->
+            console.log("${index} ${depth} '${node.description}' <- '${prevNode?.description}'")
+            if (!ranks.containsKey(node)) {
+                ranks[node] = depth
+            }
+            VisitResult.Continue
+        }
+        console.log("Caching ranks ... done")
+        ranks as Map<GraphNode, Int>
+    }
+    val ranks by cachedRanks
 
     fun addNode(node: GraphNode) {
         if (node.graph != this) {
             throw Exception("Cannot add node because it belongs to a different graph: ${node}")
         }
+        cachedRanks.clear()
         _nodes.add(node)
     }
 
@@ -66,6 +83,7 @@ class Graph {
         // Adding a new edge will change the set of which nodes are reachable from where.
         // TODO 2016-04-03 HughG: Instead of just deleting the cache, update it incrementally.
         cachedHasPathFrom.clear()
+        cachedRanks.clear()
         _edges.add(edge)
     }
 
@@ -97,4 +115,9 @@ class Graph {
 
         return hasPathFrom[to]?.contains(from) ?: false
     }
+
+    fun rank(node: GraphNode): Int {
+        return ranks[node] ?: throw Exception("Cannot determine rank of node not in graph: ${node}")
+    }
+
 }

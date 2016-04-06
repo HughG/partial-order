@@ -15,8 +15,27 @@ fun main(args: Array<String>) {
     initDB().thenP { db ->
         loadGraph(db)
     }.thenV { graph ->
-        proposeEdges(graph)
+        listByRank(graph)
+        graph
+    }.thenV { graph ->
+        val possibleEdges = proposeEdges(graph)
+        val randomIndex = Math.floor(Math.random() * possibleEdges.size)
+        val edge = possibleEdges.drop(randomIndex).first()
+        val graphEdge = GraphEdge(graph, EdgeDoc(edge.fromId, edge.toId))
+        graph.addEdge(graphEdge)
+        console.log("Added ${graphEdge}")
+        listByRank(graph)
     }.catchAndLog()
+}
+
+fun listByRank(graph: Graph) {
+    console.info("Nodes by rank ...")
+    val nodesByRank = graph.ranks.keys.groupBy { graph.ranks[it] ?: -1 }
+    val maxRank = nodesByRank.keys.max() ?: -1
+    for (rank in 0..maxRank) {
+        val nodes = nodesByRank[rank] ?: emptyList()
+        console.info("${rank}: ${nodes.map { it.description }.joinToString()}")
+    }
 }
 
 fun loadGraph(db: PouchDB): Promise<Graph> {
@@ -81,7 +100,6 @@ fun proposeEdges(graph: Graph): Collection<Edge> {
             val possibleEdge = Edge(from, to)
             if (!graph.hasPath(to, from) &&
                     !graph.edges.contains(possibleEdge)
-//                    !graph.edges.any { it == possibleEdge }
             ) {
                 allPossibleEdges.add(possibleEdge)
             }
@@ -101,26 +119,6 @@ fun proposeEdges(graph: Graph): Collection<Edge> {
                 "'${fromNode.description.truncateTo(15)}' -> '${toNode.description.truncateTo(15)}'"
         )
     }
-
-//    // TODO 2016-04-01 HughG: Would be quicker to just avoid adding these edges in the first place :-)
-//    allPossibleEdges.removeAll { possibleE ->
-//        graph.edges.any { actualE ->
-////            console.log("  Comparing")
-////            console.log("    from")
-////            console.log("      ${actualE.fromId}")
-////            console.log("      ${possibleE.fromId}")
-////            console.log("    to")
-////            console.log("      ${actualE.toId}")
-////            console.log("      ${possibleE.toId}")
-//            val result = (actualE == possibleE)
-//            if (result) {
-//                console.log("Removing ${possibleE.toPrettyString()}: match with ${actualE.toPrettyString()}")
-//            }
-//            result
-//        }
-//    }
-//    console.log("Remaining Edges:")
-//    allPossibleEdges.forEach { console.log(it.toPrettyString()) }
 
     // Return result
     return allPossibleEdges
