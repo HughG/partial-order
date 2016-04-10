@@ -10,6 +10,7 @@ import org.tameter.partialorder.dag.GraphEdge
 import org.tameter.partialorder.dag.GraphNode
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
+import kotlin.comparisons.compareBy
 
 fun main(args: Array<String>) {
     initDB().thenP { db ->
@@ -20,10 +21,14 @@ fun main(args: Array<String>) {
     }.thenV { graph ->
         val possibleEdges = proposeEdges(graph)
         val randomIndex = Math.floor(Math.random() * possibleEdges.size)
-        val edge = possibleEdges.drop(randomIndex).first()
-        val graphEdge = GraphEdge(graph, EdgeDoc(edge.fromId, edge.toId))
-        graph.addEdge(graphEdge)
-        console.log("Added ${graphEdge}")
+        val edge = possibleEdges.drop(randomIndex).firstOrNull()
+        if (edge != null) {
+            val graphEdge = GraphEdge(graph, edge)
+            graph.addEdge(graphEdge)
+            console.log("Added ${graphEdge}")
+        } else {
+            console.log("No edges to add")
+        }
         listByRank(graph)
     }.catchAndLog()
 }
@@ -106,14 +111,31 @@ fun proposeEdges(graph: Graph): Collection<Edge> {
         }
     }
 
+    // Sort edges by how much they will reduce the number of edges in each rank, starting with the
+    // lowest rank.  In other words, sort them by "the rank of the 'to' node and then the reverse of
+    // the rank of the 'from' node", because then adding that edge will move higher-up nodes
+    // furthest down the graph.
+    val maxRank = graph.maxRank
+    console.log("Max rank = ${maxRank}")
+    val sortedPossibleEdges: Collection<Edge> =
+        if (maxRank != null) {
+            allPossibleEdges.sortedWith(compareBy<Edge>(
+                    { graph.rank(graph.findNodeById(it.toId)!!) },
+                    { maxRank - graph.rank(graph.findNodeById(it.fromId)!!) }
+            ))
+        } else {
+            emptyList()
+        }
+
+    // Dump the edges to the console
     fun String.truncateTo(targetLength: Int): String {
         return if (length <= targetLength) this else substring(0, targetLength - 3) + "..."
     }
 
     console.log("Possible Edges:")
-    allPossibleEdges.forEach { edge ->
-        val fromNode: GraphNode = graph.nodes.find { it._id == edge.fromId }!!
-        val toNode: GraphNode = graph.nodes.find { it._id == edge.toId }!!
+    sortedPossibleEdges.forEach { edge ->
+        val fromNode: GraphNode = graph.findNodeById(edge.fromId)!!
+        val toNode: GraphNode = graph.findNodeById(edge.toId)!!
         console.log(
                 edge.toPrettyString(),
                 "'${fromNode.description.truncateTo(15)}' -> '${toNode.description.truncateTo(15)}'"

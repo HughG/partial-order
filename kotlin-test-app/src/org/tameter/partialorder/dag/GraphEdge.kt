@@ -7,7 +7,7 @@ class NodeFromGraph() {
     operator fun getValue(thisRef: GraphEdge, property: KProperty<*>): GraphNode {
         val name = property.name
         val id: String = thisRef.doc[name + "Id"]
-        return thisRef.graph.nodes.find { it._id == id }
+        return thisRef.graph.findNodeById(id)
                 ?: throw Exception("No '${name}' node ${id}")
     }
 
@@ -39,6 +39,13 @@ class GraphEdge(
     override fun toPrettyString(): String {
         return "GraphEdge ${from.toPrettyString()} to ${to.toPrettyString()}"
     }
+}
+
+fun GraphEdge(
+        graph: Graph,
+        edge: Edge
+): GraphEdge {
+    return GraphEdge(graph, EdgeDoc(edge.fromId, edge.toId))
 }
 
 fun GraphEdge(

@@ -7,10 +7,15 @@ import org.tameter.kotlinjs.cached
  */
 
 class Graph {
-    private val _nodes: MutableSet<GraphNode> = mutableSetOf()
-    private val _edges: MutableSet<GraphEdge> = mutableSetOf()
-    val nodes: Set<GraphNode> = _nodes
-    val edges: Set<GraphEdge> = _edges
+    private val _nodes: MutableMap<String, GraphNode> = mutableMapOf()
+    private val _edges: MutableMap<Edge, GraphEdge> = mutableMapOf()
+    val nodes: Collection<GraphNode>
+            get() = _nodes.values
+    val edges: Collection<GraphEdge>
+            get() = _edges.values
+
+    fun findNodeById(id: String): GraphNode? = _nodes[id]
+    fun findEdge(edge: Edge): GraphEdge? = _edges[edge]
 
     // Map from a node to all the nodes which have a path to it.
     private val cachedHasPathFrom = cached {
@@ -49,7 +54,7 @@ class Graph {
 
     // Map from a node to all the nodes which have a path to it.
     private val cachedRanks = cached {
-        val ranks = mutableMapOf<GraphNode, Int>()
+        val ranks = mutableMapOf<Node, Int>()
         console.log("Caching ranks ...")
         search(SearchType.DepthFirst, roots) { index, depth, node, prevEdge, prevNode ->
             console.log("${index} ${depth} '${node.description}' <- '${prevNode?.description}'")
@@ -59,16 +64,21 @@ class Graph {
             VisitResult.Continue
         }
         console.log("Caching ranks ... done")
-        ranks as Map<GraphNode, Int>
+        ranks as Map<Node, Int>
     }
     val ranks by cachedRanks
+
+    val maxRank: Int?
+    get() {
+        return ranks.values.max()
+    }
 
     fun addNode(node: GraphNode) {
         if (node.graph != this) {
             throw Exception("Cannot add node because it belongs to a different graph: ${node}")
         }
         cachedRanks.clear()
-        _nodes.add(node)
+        _nodes[node._id] = node
     }
 
     // TODO 2016-04-02 HughG: When implementing removeNode, fail if there are connected edges.
@@ -84,15 +94,15 @@ class Graph {
         // TODO 2016-04-03 HughG: Instead of just deleting the cache, update it incrementally.
         cachedHasPathFrom.clear()
         cachedRanks.clear()
-        _edges.add(edge)
+        _edges[edge] = edge
     }
 
-    fun deepClone(): Graph {
-        val g = Graph()
-        nodes.forEach { g._nodes.add(GraphNode(g, it)) }
-        edges.forEach { g._edges.add(GraphEdge(g, it)) }
-        return g
-    }
+//    fun deepClone(): Graph {
+//        val g = Graph()
+//        nodes.forEach { g._nodes.add(GraphNode(g, it)) }
+//        edges.forEach { g._edges.add(GraphEdge(g, it)) }
+//        return g
+//    }
 
     val roots: Collection<GraphNode>
         get() {
@@ -116,7 +126,7 @@ class Graph {
         return hasPathFrom[to]?.contains(from) ?: false
     }
 
-    fun rank(node: GraphNode): Int {
+    fun rank(node: Node): Int {
         return ranks[node] ?: throw Exception("Cannot determine rank of node not in graph: ${node}")
     }
 
