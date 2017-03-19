@@ -5,8 +5,7 @@ package org.tameter.kpouchdb
  */
 
 @Suppress("unused")
-@native
-interface BulkQueryResult<T> {
+external interface BulkQueryResult<T> {
     val total_rows: Int
     val offset: Int
     val rows: Array<BulkQueryRow<T>>

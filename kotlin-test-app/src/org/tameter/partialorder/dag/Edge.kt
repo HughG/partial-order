@@ -1,6 +1,5 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.kotlinjs.JSMapDelegate
 import org.tameter.kotlinjs.promise.Promise
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
@@ -10,8 +9,8 @@ open class Edge(
 ) : DocWrapper<EdgeDoc>(doc) {
     //    var axis_id: String
 
-    val fromId: String by JSMapDelegate(doc)
-    val toId: String by JSMapDelegate(doc)
+    val fromId get() = doc.fromId
+    val toId get() = doc.toId
 
     // NOTE 2016-04-02 HughG: Normally polymorphic equals is wrong because it ends up being
     // non-commutative.  However, in this case it's okay because the base class is abstract (so
@@ -37,7 +36,7 @@ open class Edge(
     }
 
     override fun toString(): String{
-        return "Edge(from ${fromId}, to ${toId}, doc ${doc.toString()})"
+        return "Edge(from ${fromId}, to ${toId}, doc ${doc})"
     }
 
     override fun toPrettyString(): String {

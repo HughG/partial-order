@@ -1,6 +1,5 @@
 package org.tameter.kpouchdb
 
-import org.tameter.kotlinjs.JSMap
 import org.tameter.kotlinjs.promise.Promise
 
 /**
@@ -8,22 +7,32 @@ import org.tameter.kotlinjs.promise.Promise
  */
 
 @Suppress("unused")
-@native
-open class PouchDB(var name: String, var options: JSMap<dynamic> = JSMap())
-{
+external open class PouchDB(name: String, options: PouchDBOptions = definedExternally) {
+    var name: String
+
     // Delete database
-    fun destroy(options: JSMap<dynamic> = JSMap()): Promise<dynamic> = noImpl
+    fun destroy(/*options: JSMap<dynamic> = definedExternally*/): Promise<dynamic>
 
     // Create/update doc
-    fun put(doc: dynamic): Promise<StoreResult> = noImpl
-    fun get(id: String): Promise<dynamic> = noImpl
+    fun put(doc: dynamic): Promise<StoreResult>
+    fun get(id: String): Promise<dynamic>
 
     // Batch create
-    fun bulkDocs(docs: Array<Any>, options: JSMap<dynamic> = JSMap()): Promise<Array<StoreResult>> = noImpl
+    fun bulkDocs(docs: Array<Any>/*, options: JSMap<dynamic> = definedExternally*/): Promise<Array<StoreResult>>
 
     // Batch fetch
-    fun <T> allDocs(options: JSMap<dynamic> = JSMap()): Promise<BulkQueryResult<T>> = noImpl
+    fun <T> allDocs(options: AllDocsOptions = definedExternally): Promise<BulkQueryResult<T>>
 
     // Database info
-    fun info(): Promise<dynamic> = noImpl
+    fun info(): Promise<dynamic>
 }
+
+external interface PouchDBOptions
+fun PouchDBOptions(): PouchDBOptions = js("{}")
+
+external interface AllDocsOptions {
+    var startkey : String
+    var endkey: String
+    var include_docs: Boolean
+}
+fun AllDocsOptions(): AllDocsOptions = js("{}")

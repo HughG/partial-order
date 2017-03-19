@@ -1,6 +1,5 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.kotlinjs.JSMapDelegate
 import org.tameter.kotlinjs.makeGuid
 import org.tameter.kotlinjs.promise.Promise
 import org.tameter.kpouchdb.PouchDB
@@ -14,7 +13,7 @@ import org.tameter.partialorder.dag.kpouchdb.toStringForNative
 open class Node(
         doc: NodeDoc
 ) : DocWrapper<NodeDoc>(doc) {
-    var description: String by JSMapDelegate(doc)
+    val description get() = doc.description
 
     // NOTE 2016-04-02 HughG: Normally polymorphic equals is wrong because it ends up being
     // non-commutative.  However, in this case it's okay because the base class is abstract (so
@@ -49,7 +48,7 @@ open class Node(
 fun Node(
         description: String
 ): Node {
-    val doc = NodeDoc(makeGuid()).apply {
+    val doc = NodeDoc(makeGuid(), "").apply {
         this.description = description
     }
     val node = Node(doc)

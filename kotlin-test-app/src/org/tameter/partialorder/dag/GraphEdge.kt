@@ -1,28 +1,14 @@
 package org.tameter.partialorder.dag
 
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
-import kotlin.reflect.KProperty
-
-class NodeFromGraph() {
-    operator fun getValue(thisRef: GraphEdge, property: KProperty<*>): GraphNode {
-        val name = property.name
-        val id: String = thisRef.doc[name + "Id"]
-        return thisRef.graph.findNodeById(id)
-                ?: throw Exception("No '${name}' node ${id}")
-    }
-
-    operator fun setValue(thisRef: Edge, property: KProperty<*>, value: Node) {
-        thisRef.doc[property.name + "Id"] = value.doc._id
-    }
-}
 
 class GraphEdge(
         val graph: Graph,
         doc: EdgeDoc
 ) : Edge(doc) {
     //    var axis_id: String
-    val from: GraphNode by NodeFromGraph()
-    val to: GraphNode by NodeFromGraph()
+    val from get() = nodeFromGraph("from", doc.fromId)
+    val to get() = nodeFromGraph("to", doc.toId)
 
     init {
         // Sanity-check existence of from/to nodes by referencing properties
@@ -33,11 +19,15 @@ class GraphEdge(
     }
 
     override fun toString(): String{
-        return "GraphEdge(from ${from}, to ${to}, doc ${doc.toString()})"
+        return "GraphEdge(from ${from}, to ${to}, doc $doc)"
     }
 
     override fun toPrettyString(): String {
         return "GraphEdge ${from.toPrettyString()} to ${to.toPrettyString()}"
+    }
+
+    private fun nodeFromGraph(nodeType: String, nodeId: String): GraphNode {
+        return graph.findNodeById(nodeId) ?: throw Exception("No '${nodeType}' node ${nodeId}")
     }
 }
 

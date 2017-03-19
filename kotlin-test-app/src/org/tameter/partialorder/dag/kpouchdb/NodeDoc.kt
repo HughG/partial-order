@@ -1,29 +1,17 @@
 package org.tameter.partialorder.dag.kpouchdb
 
-import org.tameter.kpouchdb.PouchDoc
-import org.tameter.kpouchdb.initPouchDoc
 import org.tameter.kpouchdb.toStringForNative
 
 /**
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
  */
-
-@native("Object")
-class NodeDoc() : GraphElementDoc() {
-    var description: String
-}
-
-fun NodeDoc(_id: String): NodeDoc {
-    return initPouchDoc(NodeDoc(), "N", _id)
-}
+class NodeDoc(_id: String, var description: String) : GraphElementDoc(_id, "N")
 
 fun NodeDoc(doc: NodeDoc): NodeDoc {
-    return (NodeDoc(doc._id)).apply {
-        description = doc.description
-    }
+    return NodeDoc(doc._id, doc.description)
 }
 
 // We can't just override toString, because that won't be emitted, because the class is @native.
 fun NodeDoc.toStringForNative(): String {
-    return "{${(this as PouchDoc).toStringForNative()}; description: ${description}}"
+    return "{${this.toStringForNative()}; description: ${description}}"
 }

@@ -5,8 +5,7 @@ package org.tameter.kpouchdb
  */
 
 @Suppress("unused")
-@native
-interface BulkQueryRow<T> {
+external interface BulkQueryRow<T> {
     val id: String
     val key: String
     val value: BulkQueryRowValue

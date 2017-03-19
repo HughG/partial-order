@@ -5,8 +5,7 @@ package org.tameter.kpouchdb
 */
 
 @Suppress("unused")
-@native
-interface StoreResult {
+external interface StoreResult {
     val ok: Boolean
     val id: String
     val rev: String

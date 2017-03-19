@@ -24,7 +24,7 @@ class Graph {
 
 //        console.info("Caching paths ...")
 
-        search(SearchType.DepthFirst, roots) { index, depth, node, prevEdge, prevNode ->
+        search(SearchType.DepthFirst, roots) { _/*index*/, _/*depth*/, node, _/*prevEdge*/, prevNode ->
             var hasPathFromNodeQ = hasPathFrom[node]
 //            console.log("hasPathFromNodeQ = ${hasPathFromNodeQ}")
 //            console.log("hasPathFrom = ${hasPathFrom.entries.joinToString()}")
@@ -48,7 +48,7 @@ class Graph {
 
 //        console.info("Caching paths ... done.")
 
-        hasPathFrom as Map<GraphNode, Collection<GraphNode>>
+        hasPathFrom
     }
     val hasPathFrom by cachedHasPathFrom
 
@@ -56,7 +56,7 @@ class Graph {
     private val cachedRanks = cached {
         val ranks = mutableMapOf<Node, Int>()
         console.log("Caching ranks ...")
-        search(SearchType.DepthFirst, roots) { index, depth, node, prevEdge, prevNode ->
+        search(SearchType.DepthFirst, roots) { index, depth, node, _/*prevEdge*/, prevNode ->
             console.log("${index} ${depth} '${node.description}' <- '${prevNode?.description}'")
             if (!ranks.containsKey(node)) {
                 ranks[node] = depth
@@ -64,7 +64,7 @@ class Graph {
             VisitResult.Continue
         }
         console.log("Caching ranks ... done")
-        ranks as Map<Node, Int>
+        ranks
     }
     val ranks by cachedRanks
 

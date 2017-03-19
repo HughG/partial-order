@@ -5,8 +5,7 @@ package org.tameter.kpouchdb
  */
 
 @Suppress("unused")
-@native
-interface BulkQueryRowValue {
+external interface BulkQueryRowValue {
     val rev: String
     val deleted: Boolean?
 }

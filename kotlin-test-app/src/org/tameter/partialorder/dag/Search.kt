@@ -28,14 +28,14 @@ fun Graph.search(
         searchType: SearchType,
         roots: Collection<GraphNode>,
         fn: (index: Int, depth: Int, node: GraphNode, prevEdge: GraphEdge?, prevNode: GraphNode?) -> VisitResult = {
-            index, depth, node, prevEdge, prevNode -> VisitResult.Continue
+            _/*index*/, _/*depth*/, _/*node*/, _/*prevEdge*/, _/*prevNode*/ -> VisitResult.Continue
         }
 ): SearchResult {
-    var queue = mutableListOf<GraphNode>()
-    var connectedNodes = mutableListOf<GraphNode>()
-    var connectedBy = mutableMapOf<String, GraphEdge>()
-    var id2depth = mutableMapOf<String, Int>()
-    var visited = mutableSetOf<String>()
+    val queue = mutableListOf<GraphNode>()
+    val connectedNodes = mutableListOf<GraphNode>()
+    val connectedBy = mutableMapOf<String, GraphEdge>()
+    val id2depth = mutableMapOf<String, Int>()
+    val visited = mutableSetOf<String>()
     var index = 0
     var found: GraphNode? = null
 
@@ -53,7 +53,7 @@ fun Graph.search(
 //    console.log("Initial depths: ${id2depth.entries.joinToString()}")
 
     while (queue.size != 0) {
-        var v = when (searchType) {
+        val v = when (searchType) {
             SearchType.BreadthFirst -> queue.removeAt(0)
             SearchType.DepthFirst -> queue.removeAt(queue.size - 1)
         }
@@ -68,13 +68,13 @@ fun Graph.search(
             }
         }
 
-        var depthQ = id2depth[v._id]
+        val depthQ = id2depth[v._id]
 //        console.log("Depth for ${v._id} is ${depthQ}")
-        var depth = depthQ!!
-        var prevEdge = connectedBy[v._id]
-        var prevNode = prevEdge?.from
+        val depth = depthQ!!
+        val prevEdge = connectedBy[v._id]
+        val prevNode = prevEdge?.from
 //        console.log("fn(${index + 1}, ${depth}, ${v._id}, ${prevEdge?._id}, ${prevNode?._id})")
-        var ret = fn(index++, depth, v, prevEdge, prevNode)
+        val ret = fn(index++, depth, v, prevEdge, prevNode)
 //        console.log("fn returned ${ret.name}")
         if (ret == VisitResult.Return) {
             found = v
@@ -84,10 +84,10 @@ fun Graph.search(
             break
         }
 
-        var vwEdges: Collection<GraphEdge> = v.outgoing()
+        val vwEdges: Collection<GraphEdge> = v.outgoing()
 //        console.log("Enqueueing ${vwEdges.joinToString {it._id}}")
         for (e in vwEdges) {
-            var w = e.to
+            val w = e.to
             queue.add(queue.size, w)
 
             if (searchType == SearchType.BreadthFirst) {
@@ -102,14 +102,6 @@ fun Graph.search(
         }
     }
 
-    var connectedEles = mutableListOf<Edge>()
-
-    for (node in connectedNodes) {
-        var edge = connectedBy[node._id]
-        if (edge != null) {
-            connectedEles.add(edge)
-        }
-    }
-
-    return SearchResult(connectedEles, found)
+    val path = connectedNodes.mapNotNull { connectedBy[it._id] }
+    return SearchResult(path, found)
 }

@@ -24,7 +24,7 @@ fun GraphNode(
         graph: Graph,
         description: String
 ): GraphNode {
-    return GraphNode(graph, NodeDoc(makeGuid()).apply {
+    return GraphNode(graph, NodeDoc(makeGuid(), "").apply {
         this.description = description
     })
 }

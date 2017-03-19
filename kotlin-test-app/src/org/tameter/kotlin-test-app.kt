@@ -1,8 +1,8 @@
 package org.tameter
 
-import org.tameter.kotlinjs.jsobject
 import org.tameter.kotlinjs.promise.Promise
 import org.tameter.kotlinjs.promise.catchAndLog
+import org.tameter.kpouchdb.AllDocsOptions
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.Edge
 import org.tameter.partialorder.dag.Graph
@@ -10,7 +10,7 @@ import org.tameter.partialorder.dag.GraphEdge
 import org.tameter.partialorder.dag.GraphNode
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
-import kotlin.comparisons.compareBy
+import kotlin.js.Math
 
 fun main(args: Array<String>) {
     initDB().thenP { db ->
@@ -49,7 +49,7 @@ fun loadGraph(db: PouchDB): Promise<Graph> {
     console.log("Loading graph ...")
 
     // Load nodes
-    return db.allDocs<NodeDoc>(jsobject {
+    return db.allDocs<NodeDoc>(AllDocsOptions().apply {
         startkey = "N_"
         endkey = "N_\uffff"
         include_docs = true
@@ -69,7 +69,7 @@ fun loadGraph(db: PouchDB): Promise<Graph> {
         it
     }.thenP {
         // Load edges
-        db.allDocs<EdgeDoc>(jsobject {
+        db.allDocs<EdgeDoc>(AllDocsOptions().apply {
             startkey = "E_"
             endkey = "E_\uffff"
             include_docs = true

@@ -11,10 +11,9 @@ package org.tameter.kotlinjs.promise
 
     TODO 2016-04-01 HughG: Add @CheckReturnValue from FundBugs / JSR 305
  */
-@native
-abstract class Promise<T> {
-    @native("then") fun <U> thenV(result: (T) -> U): Promise<U>
-    @native("then") fun <U> thenP(result: (T) -> Promise<U>): Promise<U>
+external abstract class Promise<T> {
+    @JsName("then") fun <U> thenV(result: (T) -> U): Promise<U>
+    @JsName("then") fun <U> thenP(result: (T) -> Promise<U>): Promise<U>
     fun catch(error: (T) -> Unit): Unit
 }
 

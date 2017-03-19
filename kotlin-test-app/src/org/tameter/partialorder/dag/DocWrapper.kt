@@ -1,6 +1,6 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.kotlinjs.JSMapDelegate
+import org.tameter.kpouchdb.PouchDoc
 import org.tameter.partialorder.dag.kpouchdb.GraphElementDoc
 
 /**
@@ -9,11 +9,7 @@ import org.tameter.partialorder.dag.kpouchdb.GraphElementDoc
 
 abstract class DocWrapper<TDoc: GraphElementDoc>(
         internal val doc: TDoc
-) {
-    var _id: String by JSMapDelegate(doc)
-    var type: String by JSMapDelegate(doc)
-    var rev: String by JSMapDelegate(doc)
-
+) : PouchDoc by doc {
     abstract fun toPrettyString(): String
 
     override fun equals(other: Any?): Boolean{
@@ -31,7 +27,7 @@ abstract class DocWrapper<TDoc: GraphElementDoc>(
     override fun hashCode(): Int{
         var result = _id.hashCode()
         result += 31 * result + type.hashCode()
-        result += 31 * result + rev.hashCode()
+        result += 31 * result + (rev ?: "").hashCode()
         return result
     }
 }

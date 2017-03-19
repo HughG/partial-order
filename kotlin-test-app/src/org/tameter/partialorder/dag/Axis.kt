@@ -1,8 +1,7 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.kpouchdb.PouchDoc
+import org.tameter.kpouchdb.AbstractPouchDoc
 
-@native("Object")
-class Axis<E> : PouchDoc() {
-//    var edges: Array<E> = noImpl
+class Axis<E>(_id: String) : AbstractPouchDoc(_id, "A") {
+//    var edges: Array<E>
 }
