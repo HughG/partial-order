@@ -15,7 +15,7 @@ abstract class DocWrapper<TDoc: GraphElementDoc>(
     override fun equals(other: Any?): Boolean{
         if (this === other) return true
 
-        other as DocWrapper<*>
+        if (other !is DocWrapper<*>) return false
 
         if (_id != other._id) return false
         if (type != other.type) return false

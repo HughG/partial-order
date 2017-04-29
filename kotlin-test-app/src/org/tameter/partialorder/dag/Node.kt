@@ -23,7 +23,7 @@ open class Node(
     final override fun equals(other: Any?): Boolean{
         if (this === other) return true
 
-        other as NodeDoc
+        if (other !is Node) return false
 
         if (description != other.description) return false
 

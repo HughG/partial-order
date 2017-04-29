@@ -20,7 +20,7 @@ open class Edge(
     final override fun equals(other: Any?): Boolean{
         if (this === other) return true
 
-        other as EdgeDoc
+        if (other !is Edge) return false
 
         if (fromId != other.fromId) return false
         if (toId != other.toId) return false
