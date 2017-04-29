@@ -14,7 +14,7 @@ package org.tameter.kotlinjs.promise
 external abstract class Promise<T> {
     @JsName("then") fun <U> thenV(result: (T) -> U): Promise<U>
     @JsName("then") fun <U> thenP(result: (T) -> Promise<U>): Promise<U>
-    fun catch(error: (T) -> Unit): Unit
+    fun catch(error: (Any) -> Unit): Unit
 }
 
 fun <T> Promise<T>.catchAndLog(): Unit {

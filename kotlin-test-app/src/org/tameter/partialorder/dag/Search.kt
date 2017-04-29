@@ -26,7 +26,6 @@ data class SearchResult (
 
 fun Graph.search(
         searchType: SearchType,
-        roots: Collection<GraphNode>,
         fn: (index: Int, depth: Int, node: GraphNode, prevEdge: GraphEdge?, prevNode: GraphNode?) -> VisitResult = {
             _/*index*/, _/*depth*/, _/*node*/, _/*prevEdge*/, _/*prevNode*/ -> VisitResult.Continue
         }

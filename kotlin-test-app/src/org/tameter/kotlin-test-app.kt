@@ -4,10 +4,7 @@ import org.tameter.kotlinjs.promise.Promise
 import org.tameter.kotlinjs.promise.catchAndLog
 import org.tameter.kpouchdb.AllDocsOptions
 import org.tameter.kpouchdb.PouchDB
-import org.tameter.partialorder.dag.Edge
-import org.tameter.partialorder.dag.Graph
-import org.tameter.partialorder.dag.GraphEdge
-import org.tameter.partialorder.dag.GraphNode
+import org.tameter.partialorder.dag.*
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
 import kotlin.js.Math
@@ -39,7 +36,7 @@ fun listByRank(graph: Graph) {
     val maxRank = nodesByRank.keys.max() ?: -1
     for (rank in 0..maxRank) {
         val nodes = nodesByRank[rank] ?: emptyList()
-        console.info("${rank}: ${nodes.map { it.description }.joinToString()}")
+        console.info("${rank}: ${nodes.map(Node::description).joinToString()}")
     }
 }
 
@@ -57,7 +54,7 @@ fun loadGraph(db: PouchDB): Promise<Graph> {
         console.log("Nodes:")
         console.log(it)
         it.rows.forEach {
-            var node: NodeDoc? = it.doc
+            val node: NodeDoc? = it.doc
             if (node == null) {
                 console.log("No node doc in ${it}")
             } else {
@@ -78,7 +75,7 @@ fun loadGraph(db: PouchDB): Promise<Graph> {
         console.log("Edges:")
         console.log(it)
         it.rows.forEach {
-            var edge: EdgeDoc? = it.doc
+            val edge: EdgeDoc? = it.doc
             if (edge == null) {
                 console.log("No edge doc in ${it}")
             } else {

@@ -1,6 +1,5 @@
 package org.tameter.kotlinjs
 
-import kotlin.Lazy
 import kotlin.reflect.KProperty
 
 /**
