@@ -28,11 +28,11 @@ external open class PouchDB(name: String, options: PouchDBOptions = definedExter
 }
 
 external interface PouchDBOptions
-fun PouchDBOptions(): PouchDBOptions = js("{}")
+fun PouchDBOptions(): PouchDBOptions = js("{ return {}; }")
 
 external interface AllDocsOptions {
     var startkey : String
     var endkey: String
     var include_docs: Boolean
 }
-fun AllDocsOptions(): AllDocsOptions = js("{}")
+fun AllDocsOptions(): AllDocsOptions = js("{ return {}; }")
