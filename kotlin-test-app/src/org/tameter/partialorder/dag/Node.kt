@@ -4,7 +4,6 @@ import org.tameter.kotlinjs.makeGuid
 import org.tameter.kotlinjs.promise.Promise
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
-import org.tameter.partialorder.dag.kpouchdb.toStringForNative
 
 /**
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
@@ -37,7 +36,7 @@ open class Node(
     }
 
     override fun toString(): String{
-        return "GraphNode(dscr ${description}, doc ${doc.toStringForNative()})"
+        return "GraphNode(dscr ${description}, doc ${doc})"
     }
 
     override fun toPrettyString(): String {

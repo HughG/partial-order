@@ -1,6 +1,5 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.kpouchdb.PouchDoc
 import org.tameter.partialorder.dag.kpouchdb.GraphElementDoc
 
 /**
@@ -9,7 +8,11 @@ import org.tameter.partialorder.dag.kpouchdb.GraphElementDoc
 
 abstract class DocWrapper<TDoc: GraphElementDoc>(
         internal val doc: TDoc
-) : PouchDoc by doc {
+) {
+    val _id: String get() { return doc._id }
+    private val type: String get() { return doc.type }
+    private val rev: String? get() { return doc.rev }
+
     abstract fun toPrettyString(): String
 
     override fun equals(other: Any?): Boolean{
