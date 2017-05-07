@@ -64,7 +64,7 @@ fun Edge.store(
             throw Exception("Failed to store ${doc}")
         }
         // Update rev to match DB, otherwise we won't be able to store any changes later.
-        doc.rev = result.rev
+        doc._rev = result.rev
         this
     }
 }

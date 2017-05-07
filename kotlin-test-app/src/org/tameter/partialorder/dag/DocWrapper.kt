@@ -1,5 +1,6 @@
 package org.tameter.partialorder.dag
 
+import org.tameter.kpouchdb.PouchDoc
 import org.tameter.partialorder.dag.kpouchdb.GraphElementDoc
 
 /**
@@ -8,11 +9,7 @@ import org.tameter.partialorder.dag.kpouchdb.GraphElementDoc
 
 abstract class DocWrapper<TDoc: GraphElementDoc>(
         internal val doc: TDoc
-) {
-    val _id: String get() { return doc._id }
-    private val type: String get() { return doc.type }
-    private val rev: String? get() { return doc.rev }
-
+) : PouchDoc by doc {
     abstract fun toPrettyString(): String
 
     override fun equals(other: Any?): Boolean{
@@ -22,7 +19,7 @@ abstract class DocWrapper<TDoc: GraphElementDoc>(
 
         if (_id != other._id) return false
         if (type != other.type) return false
-        if (rev != other.rev) return false
+        if (_rev != other._rev) return false
 
         return true
     }
@@ -30,7 +27,7 @@ abstract class DocWrapper<TDoc: GraphElementDoc>(
     override fun hashCode(): Int{
         var result = _id.hashCode()
         result += 31 * result + type.hashCode()
-        result += 31 * result + (rev ?: "").hashCode()
+        result += 31 * result + _rev.hashCode()
         return result
     }
 }

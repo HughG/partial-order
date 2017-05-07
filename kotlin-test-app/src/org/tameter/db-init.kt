@@ -27,24 +27,29 @@ private fun resetDB(): Promise<PouchDB> {
 
 private fun addDummyData(db: PouchDB): Promise<PouchDB> {
     val g: Graph = Graph()
-    var readNode = GraphNode(g, "Investigate stuff")
-    var sighNode = GraphNode(g, "Be frustrated at difficulty of new stuff")
-    var grumpNode = GraphNode(g, "Grumble to self about difficulty of new stuff")
-    var us1Node = GraphNode(g, "Understand Promises better")
-    var edge1 = GraphEdge(g, readNode, sighNode).apply {
+    val readNode = GraphNode(g, "Investigate stuff")
+    val sighNode = GraphNode(g, "Be frustrated at difficulty of new stuff")
+    val grumpNode = GraphNode(g, "Grumble to self about difficulty of new stuff")
+    val us1Node = GraphNode(g, "Understand Promises better")
+    val edge1 = GraphEdge(g, readNode, sighNode).apply {
         //axis_id = "Dependency";
     }
-    var edge2 = GraphEdge(g, sighNode, us1Node).apply {
+    val edge2 = GraphEdge(g, sighNode, us1Node).apply {
         //axis_id = "Dependency";
     }
-    return db.bulkDocs(arrayOf(
+    val dummyGraphObjects: Array<Any> = arrayOf(
             readNode,
             sighNode,
             grumpNode,
             us1Node,
             edge1,
             edge2
-    ).map { it.doc }.toTypedArray()).thenV { results ->
+    ).map { it.doc }.toTypedArray()
+    console.log("Bulk store inputs:")
+    dummyGraphObjects.forEach {
+        console.log(it)
+    }
+    return db.bulkDocs(dummyGraphObjects).thenV { results ->
         console.log("Bulk store results:")
         results.forEach { console.log(it) }
         db

@@ -1,5 +1,14 @@
 package org.tameter.partialorder.dag.kpouchdb
 
-class AxisDoc<E>(_id: String) : GraphElementDoc(_id, "A") {
+/**
+ * Copyright (c) 2016-2017 Hugh Greene (githugh@tameter.org).
+ */
+
+external class AxisDoc<E>(_id: String) : GraphElementDoc {
 //    var edges: Array<E>
+}
+
+fun AxisDoc(_id: String): EdgeDoc {
+    return GraphElementDoc<EdgeDoc>(_id, "A").apply {
+    }
 }
