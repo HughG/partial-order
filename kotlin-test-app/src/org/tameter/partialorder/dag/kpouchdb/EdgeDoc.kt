@@ -5,14 +5,14 @@ package org.tameter.partialorder.dag.kpouchdb
  */
 
 external interface EdgeDoc : GraphElementDoc {
-    var fromId: String
-    var toId: String
+    val fromId: String
+    val toId: String
 }
 
 fun EdgeDoc(_id: String, fromId: String, toId: String): EdgeDoc {
     return GraphElementDoc<EdgeDoc>(_id, "E").apply {
-        this.fromId = fromId
-        this.toId = toId
+        this.asDynamic().fromId = fromId
+        this.asDynamic().toId = toId
     }
 }
 

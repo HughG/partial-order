@@ -7,18 +7,17 @@ import org.tameter.kpouchdb.toStringForExternal
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
  */
 external interface NodeDoc : GraphElementDoc {
-    var description: String
+    val description: String
 }
 
 fun NodeDoc.toStringForExternal(): String {
-    @Suppress("UNCHECKED_CAST_TO_NATIVE_INTERFACE")
-    return "${(this as PouchDoc).toStringForExternal()}, description: ${description}"
+    return "${this.unsafeCast<PouchDoc>().toStringForExternal()}, description: ${description}"
 }
 
 
 fun NodeDoc(_id: String, description: String): NodeDoc {
     return GraphElementDoc<NodeDoc>(_id, "N").apply {
-        this.description = description
+        this.asDynamic().description = description
     }
 }
 

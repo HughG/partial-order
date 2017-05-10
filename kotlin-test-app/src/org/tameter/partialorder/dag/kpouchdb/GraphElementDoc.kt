@@ -8,14 +8,14 @@ import org.tameter.kpouchdb.PouchDoc
  */
 
 external interface GraphElementDoc : PouchDoc {
-    override var _id: String
+    override val _id: String
     override var _rev: String
-    override var type: String
+    override val type: String
 }
 
 fun <T: GraphElementDoc> GraphElementDoc(_id: String, type: String): T {
     return jsobject<T>().apply {
-        this._id = "${type}_${_id}"
-        this.type = type
+        this.asDynamic()._id = "${type}_${_id}"
+        this.asDynamic().type = type
     }
 }

@@ -24,9 +24,7 @@ fun GraphNode(
         graph: Graph,
         description: String
 ): GraphNode {
-    return GraphNode(graph, NodeDoc(makeGuid(), description).apply {
-        this.description = description
-    })
+    return GraphNode(graph, NodeDoc(makeGuid(), description))
 }
 
 // Copy constructor (also copies the doc)

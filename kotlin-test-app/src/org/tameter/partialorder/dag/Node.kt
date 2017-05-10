@@ -1,10 +1,10 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.partialorder.util.makeGuid
 import org.tameter.kotlin.js.promise.Promise
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.kpouchdb.toStringForExternal
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
+import org.tameter.partialorder.util.makeGuid
 
 /**
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
@@ -48,9 +48,7 @@ open class Node(
 fun Node(
         description: String
 ): Node {
-    val doc = NodeDoc(makeGuid(), description).apply {
-        this.description = description
-    }
+    val doc = NodeDoc(makeGuid(), description)
     val node = Node(doc)
 //    console.log(node.toString())
     return node

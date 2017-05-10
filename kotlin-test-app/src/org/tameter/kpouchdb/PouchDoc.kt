@@ -5,9 +5,9 @@ package org.tameter.kpouchdb
  */
 
 external interface PouchDoc {
-    var _id: String
+    val _id: String
     var _rev: String
-    var type: String
+    val type: String
 }
 
 fun PouchDoc.toStringForExternal(): String {
