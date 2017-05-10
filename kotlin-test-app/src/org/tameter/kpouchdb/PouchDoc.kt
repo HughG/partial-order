@@ -11,5 +11,5 @@ external interface PouchDoc {
 }
 
 fun PouchDoc.toStringForExternal(): String {
-    return "_id: ${_id}, rev: ${_rev}, type: ${type}"
+    return "_id: ${_id}, _rev: ${_rev}, type: ${type}"
 }

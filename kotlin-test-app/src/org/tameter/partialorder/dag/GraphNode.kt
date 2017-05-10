@@ -1,6 +1,6 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.kotlinjs.makeGuid
+import org.tameter.partialorder.util.makeGuid
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
 
 /**
@@ -24,7 +24,7 @@ fun GraphNode(
         graph: Graph,
         description: String
 ): GraphNode {
-    return GraphNode(graph, NodeDoc(makeGuid(), "").apply {
+    return GraphNode(graph, NodeDoc(makeGuid(), description).apply {
         this.description = description
     })
 }

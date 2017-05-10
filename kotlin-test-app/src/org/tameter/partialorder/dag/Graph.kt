@@ -1,6 +1,6 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.kotlinjs.cached
+import org.tameter.partialorder.util.cached
 
 /**
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).

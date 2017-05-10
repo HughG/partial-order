@@ -1,7 +1,7 @@
 package org.tameter
 
-import org.tameter.kotlinjs.promise.Promise
-import org.tameter.kotlinjs.promise.catchAndLog
+import org.tameter.kotlin.js.promise.Promise
+import org.tameter.kotlin.js.promise.catchAndLog
 import org.tameter.kpouchdb.AllDocsOptions
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.*

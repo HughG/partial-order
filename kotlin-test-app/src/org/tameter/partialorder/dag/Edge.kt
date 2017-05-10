@@ -1,6 +1,6 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.kotlinjs.promise.Promise
+import org.tameter.kotlin.js.promise.Promise
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 

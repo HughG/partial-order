@@ -1,6 +1,6 @@
 package org.tameter
 
-import org.tameter.kotlinjs.promise.Promise
+import org.tameter.kotlin.js.promise.Promise
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.Graph
 import org.tameter.partialorder.dag.GraphEdge

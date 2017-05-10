@@ -1,6 +1,6 @@
 package org.tameter.kpouchdb
 
-import org.tameter.kotlinjs.promise.Promise
+import org.tameter.kotlin.js.promise.Promise
 
 /**
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).

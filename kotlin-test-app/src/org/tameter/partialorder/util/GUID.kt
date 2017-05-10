@@ -1,4 +1,4 @@
-package org.tameter.kotlinjs
+package org.tameter.partialorder.util
 
 import kotlin.browser.window
 import kotlin.js.Date
@@ -19,7 +19,7 @@ fun makeGuid(): String {
 
     var d: Int = Math.floor(Date().getTime() + window.performance.now())
     val uuid = GUID_TEMPLATE.replace(Regex("[xy]"), { c: MatchResult ->
-        val r = Math.floor(Math.abs(d + Math.random()*16)).rem(16)
+        val r = Math.floor(Math.abs(d + Math.random() * 16)).rem(16)
         d /= 16
         (if (c.value == "x") r else (r and 0x3 or 0x8)).toString(16)
     })

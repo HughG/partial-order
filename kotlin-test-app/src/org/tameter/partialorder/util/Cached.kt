@@ -1,4 +1,4 @@
-package org.tameter.kotlinjs
+package org.tameter.partialorder.util
 
 import kotlin.reflect.KProperty
 

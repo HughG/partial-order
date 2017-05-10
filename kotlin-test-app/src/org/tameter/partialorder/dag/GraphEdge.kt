@@ -1,5 +1,6 @@
 package org.tameter.partialorder.dag
 
+import org.tameter.kpouchdb.toStringForExternal
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 
 class GraphEdge(
@@ -19,7 +20,7 @@ class GraphEdge(
     }
 
     override fun toString(): String{
-        return "GraphEdge(from ${from}, to ${to}, doc $doc)"
+        return "GraphEdge(from ${from}, to ${to}, doc ${doc.toStringForExternal()})"
     }
 
     override fun toPrettyString(): String {

@@ -4,7 +4,7 @@ package org.tameter.partialorder.dag.kpouchdb
  * Copyright (c) 2016-2017 Hugh Greene (githugh@tameter.org).
  */
 
-external class EdgeDoc : GraphElementDoc {
+external interface EdgeDoc : GraphElementDoc {
     var fromId: String
     var toId: String
 }

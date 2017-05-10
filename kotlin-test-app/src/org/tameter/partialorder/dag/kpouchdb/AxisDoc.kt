@@ -4,7 +4,7 @@ package org.tameter.partialorder.dag.kpouchdb
  * Copyright (c) 2016-2017 Hugh Greene (githugh@tameter.org).
  */
 
-external class AxisDoc<E>(_id: String) : GraphElementDoc {
+external interface AxisDoc<E>: GraphElementDoc {
 //    var edges: Array<E>
 }
 

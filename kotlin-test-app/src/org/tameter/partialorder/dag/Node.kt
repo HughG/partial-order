@@ -1,8 +1,9 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.kotlinjs.makeGuid
-import org.tameter.kotlinjs.promise.Promise
+import org.tameter.partialorder.util.makeGuid
+import org.tameter.kotlin.js.promise.Promise
 import org.tameter.kpouchdb.PouchDB
+import org.tameter.kpouchdb.toStringForExternal
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
 
 /**
@@ -36,7 +37,7 @@ open class Node(
     }
 
     override fun toString(): String{
-        return "GraphNode(dscr ${description}, doc ${doc})"
+        return "GraphNode(doc ${doc.toStringForExternal()})"
     }
 
     override fun toPrettyString(): String {
@@ -47,7 +48,7 @@ open class Node(
 fun Node(
         description: String
 ): Node {
-    val doc = NodeDoc(makeGuid(), "").apply {
+    val doc = NodeDoc(makeGuid(), description).apply {
         this.description = description
     }
     val node = Node(doc)

@@ -6,7 +6,7 @@ import org.tameter.kpouchdb.toStringForExternal
 /**
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
  */
-external class NodeDoc(description: String) : GraphElementDoc {
+external interface NodeDoc : GraphElementDoc {
     var description: String
 }
 
@@ -16,10 +16,9 @@ fun NodeDoc.toStringForExternal(): String {
 }
 
 
-fun NodeDoc(_id: String, type: String): NodeDoc {
+fun NodeDoc(_id: String, description: String): NodeDoc {
     return GraphElementDoc<NodeDoc>(_id, "N").apply {
-        this._id = _id
-        this.type = type
+        this.description = description
     }
 }
 
