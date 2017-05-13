@@ -6,3 +6,6 @@ package org.tameter.kotlin.js
 
 @Suppress("NOTHING_TO_INLINE")
 inline fun <T> jsobject(): T = js("{ return {}; }")
+
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T> jsobject(init: T.() -> Unit): T = jsobject<T>().apply(init)

@@ -14,8 +14,8 @@ external interface GraphElementDoc : PouchDoc {
 }
 
 fun <T: GraphElementDoc> GraphElementDoc(_id: String, type: String): T {
-    return jsobject<T>().apply {
-        this.asDynamic()._id = "${type}_${_id}"
-        this.asDynamic().type = type
+    return jsobject {
+        asDynamic()._id = "${type}_${_id}"
+        asDynamic().type = type
     }
 }
