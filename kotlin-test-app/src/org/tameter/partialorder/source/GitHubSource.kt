@@ -3,9 +3,9 @@ package org.tameter.partialorder.source
 import org.tameter.kotlin.js.promise.Promise
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
-import org.tameter.partialorder.lib.jquery.JQueryPromise
 import org.tameter.partialorder.lib.jquery.JQueryXHR
 import org.tameter.partialorder.lib.jquery.jQuery
+import org.tameter.partialorder.lib.jquery.toPouchDB
 
 /**
  * Copyright (c) 2017 Hugh Greene (githugh@tameter.org).
@@ -16,9 +16,6 @@ external interface GitHubIssue {
     val number: Long
     val title: String
 }
-
-fun <T> JQueryPromise<T>.toPouchDB() = unsafeCast<Promise<T>>()
-fun <T> Promise<T>.toJQuery() = unsafeCast<JQueryPromise<T>>()
 
 class GitHubSource(
         val user: String,

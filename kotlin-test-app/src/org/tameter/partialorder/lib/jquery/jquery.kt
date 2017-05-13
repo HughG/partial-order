@@ -3,7 +3,8 @@
         "OVERRIDING_FINAL_MEMBER",
         "RETURN_TYPE_MISMATCH_ON_OVERRIDE",
         "CONFLICTING_OVERLOADS",
-        "unused"
+        "unused",
+        "DEPRECATION"
 )
 
 // TODO 2017-05-13 HughG: Automatically add package declaration on conversion
