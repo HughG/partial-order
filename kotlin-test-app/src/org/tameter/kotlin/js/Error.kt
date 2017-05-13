@@ -4,16 +4,7 @@
 
 package org.tameter.kotlin.js
 
-external class Error(
-        message: String = definedExternally,
-        fileName: String = definedExternally,
-        lineNumber: String = definedExternally
-) {
-    var message: String
-    var name: String
-}
-
-var Error.stack: String
+var Throwable.stack: String
     get() {
         val stack = this.asDynamic().stack
         return if (stack == undefined) { "(stack is undefined)" } else { stack }

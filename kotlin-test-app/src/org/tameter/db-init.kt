@@ -1,25 +1,23 @@
 package org.tameter
 
-import org.tameter.kotlin.js.promise.Promise
+import org.tameter.kotlin.js.promise.async
+import org.tameter.kotlin.js.promise.await
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.source.GitHubSource
+import kotlin.js.Promise
 
 private val DB_NAME = "http://localhost:5984/ranking"
 
-internal fun initDB(): Promise<PouchDB> {
-    return resetDB().thenP { db ->
-//        DummyDataSource().populate(db)
-        GitHubSource("HughG", "partial-order").populate(db)
-    }
+internal fun initDB(): Promise<PouchDB> = async {
+    val db = resetDB().await()
+//    DummyDataSource().populate(db)
+    GitHubSource("HughG", "partial-order").populate(db).await()
 }
 
-private fun resetDB(): Promise<PouchDB> {
-    return (PouchDB(DB_NAME)).destroy().thenP {
-        val db: PouchDB = PouchDB(DB_NAME)
+private fun resetDB(): Promise<PouchDB> = async {
+    (PouchDB(DB_NAME)).destroy().await()
 
-        db.info().thenV {
-            console.log(it)
-            db
-        }
-    }
+    val db: PouchDB = PouchDB(DB_NAME)
+    console.log(db.info().await())
+    db
 }
