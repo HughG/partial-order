@@ -18,7 +18,7 @@ external open class PouchDB(name: String, options: PouchDBOptions = definedExter
     fun get(id: String): Promise<dynamic>
 
     // Batch create
-    fun bulkDocs(docs: Array<Any>/*, options: JSMap<dynamic> = definedExternally*/): Promise<Array<StoreResult>>
+    fun bulkDocs(docs: Array<out PouchDoc>/*, options: JSMap<dynamic> = definedExternally*/): Promise<Array<StoreResult>>
 
     // Batch fetch
     fun <T> allDocs(options: AllDocsOptions = definedExternally): Promise<BulkQueryResult<T>>

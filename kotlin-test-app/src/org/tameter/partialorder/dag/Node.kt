@@ -41,7 +41,7 @@ open class Node(
     }
 
     override fun toPrettyString(): String {
-        return "{G ${_id} ${description}}"
+        return "Node ${_id}: ${description}"
     }
 }
 
