@@ -1,0 +1,23 @@
+{
+  "name": "partial-order",
+  "version": "0.0.1",
+  "description": "A tool for partially ordering things.",
+  "main": "out/production/kotlin-test-app/kotlin-test-app.js",
+  "dependencies": {
+    "ts2kt": "0.0.12"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HughG/partial-order.git"
+  },
+  "author": "Hugh Greene <githugh@tameter.org>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HughG/partial-order/issues"
+  },
+  "homepage": "https://github.com/HughG/partial-order#readme"
+}

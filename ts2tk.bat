@@ -1,0 +1,1 @@
+node %~dp0node_modules\ts2kt\ts2kt.js %*
