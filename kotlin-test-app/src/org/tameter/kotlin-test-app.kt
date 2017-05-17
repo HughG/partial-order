@@ -2,7 +2,7 @@ package org.tameter
 
 import org.tameter.kotlin.js.promise.async
 import org.tameter.kotlin.js.promise.await
-import org.tameter.kotlin.js.promise.catchAndLog
+import org.tameter.kotlin.js.stack
 import org.tameter.kpouchdb.AllDocsOptions
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.*
@@ -13,21 +13,25 @@ import kotlin.js.Promise
 
 fun main(args: Array<String>) {
     async {
-        val db = initDB().await()
-        val graph = loadGraph(db).await()
-        listByRank(graph)
-        val possibleEdges = proposeEdges(graph)
-        val randomIndex = Math.floor(Math.random() * possibleEdges.size)
-        val edge = possibleEdges.drop(randomIndex).firstOrNull()
-        if (edge != null) {
-            val graphEdge = GraphEdge(graph, edge)
-            graph.addEdge(graphEdge)
-            console.log("Added ${graphEdge}")
-        } else {
-            console.log("No edges to add")
+        try {
+            val db = initDB().await()
+            val graph = loadGraph(db).await()
+            listByRank(graph)
+            val possibleEdges = proposeEdges(graph)
+            val randomIndex = Math.floor(Math.random() * possibleEdges.size)
+            val edge = possibleEdges.drop(randomIndex).firstOrNull()
+            if (edge != null) {
+                val graphEdge = GraphEdge(graph, edge)
+                graph.addEdge(graphEdge)
+                console.log("Added ${graphEdge}")
+            } else {
+                console.log("No edges to add")
+            }
+            listByRank(graph)
+        } catch (e: Throwable) {
+            console.log(e.toString() + ": " + e.stack)
         }
-        listByRank(graph)
-    }.catchAndLog()
+    }
 }
 
 fun listByRank(graph: Graph) {

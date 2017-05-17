@@ -37,6 +37,6 @@ inline suspend fun <T> Promise<T>.await() = kotlin.coroutines.experimental.suspe
 }
 
 
-fun <T> Promise<T>.catchAndLog(): Unit {
-    catch { console.log(it.toString() + ": " + it.stack) }
+fun <T> Promise<T>.catchAndLog(): Promise<Unit> {
+    return catch { console.log(it.toString() + ": " + it.stack) }
 }

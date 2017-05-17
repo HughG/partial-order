@@ -1,6 +1,5 @@
 package org.tameter.partialorder.lib.jquery
 
-import org.tameter.kotlin.js.promise.await
 import kotlin.js.Promise
 
 
@@ -10,4 +9,10 @@ import kotlin.js.Promise
 
 inline fun <T> JQueryPromise<T>.toKotlin() = unsafeCast<Promise<T>>()
 
-inline suspend fun <T> JQueryPromise<T>.await() = toKotlin().await()
+//inline suspend fun <T> JQueryPromise<T>.await() = toKotlin().await()
+
+
+inline suspend fun <T> JQueryPromise<T>.await() = kotlin.coroutines.experimental.suspendCoroutine<T> { c ->
+    then({ value: T?, _: Any -> c.resume(value!!) }, { c.resumeWithException(it as Throwable) })
+}
+
