@@ -3,5 +3,7 @@
 /node_modules/
 /lib/
 /out/
-/web/js/app/
+/partial-order-app/.gradle
+/partial-order-app/build
+/partial-order-app/web
 /requirements.html

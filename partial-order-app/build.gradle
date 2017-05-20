@@ -1,0 +1,67 @@
+group 'org.tameter.partial-order'
+version '0.1-SNAPSHOT'
+
+buildscript {
+    ext.kotlin_version = '1.1.2'
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'kotlin2js'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
+}
+
+
+task deployJs(type: Copy) {
+    group = 'deploy'
+    dependsOn build
+
+    includeEmptyDirs = false
+
+    configurations.runtime.each {
+        from zipTree(it.absolutePath)
+    }
+    configurations.runtime.allArtifacts.each { PublishArtifact artifact ->
+        from zipTree(artifact.file.absolutePath)
+    }
+    into "${projectDir}/web/js"
+    include { fileTreeElement ->
+        def path = fileTreeElement.path
+        path.endsWith(".js") && (path.startsWith("META-INF/resources/") || !path.startsWith("META-INF/"))
+    }
+}
+
+task deployHtml(type: Copy) {
+    group = 'deploy'
+    dependsOn build
+
+    includeEmptyDirs = false
+
+    configurations.runtime.each {
+        from zipTree(it.absolutePath)
+    }
+    configurations.runtime.allArtifacts.each { PublishArtifact artifact ->
+        from zipTree(artifact.file.absolutePath)
+    }
+    into "${projectDir}/web"
+    include { fileTreeElement ->
+        def path = fileTreeElement.path
+        path.endsWith(".html") && (path.startsWith("META-INF/resources/") || !path.startsWith("META-INF/"))
+    }
+}
+
+task deploy {
+    group = 'deploy'
+    dependsOn deployJs, deployHtml
+}

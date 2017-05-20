@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/kotlin-test-app/kotlin-test-app.iml" filepath="$PROJECT_DIR$/kotlin-test-app/kotlin-test-app.iml" />
       <module fileurl="file://$PROJECT_DIR$/partial-order.iml" filepath="$PROJECT_DIR$/partial-order.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/partial-order-app.iml" filepath="$PROJECT_DIR$/.idea/modules/partial-order-app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/partial-order-app_main.iml" filepath="$PROJECT_DIR$/.idea/modules/partial-order-app_main.iml" group="partial-order-app" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/partial-order-app_test.iml" filepath="$PROJECT_DIR$/.idea/modules/partial-order-app_test.iml" group="partial-order-app" />
     </modules>
   </component>
 </project>
