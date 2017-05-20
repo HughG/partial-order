@@ -1,6 +1,7 @@
 package org.tameter
 
 import kotlinx.html.dom.append
+import kotlinx.html.js.onClickFunction
 import kotlinx.html.table
 import kotlinx.html.td
 import kotlinx.html.th
@@ -13,6 +14,7 @@ import org.tameter.partialorder.dag.*
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
 import kotlin.browser.document
+import kotlin.browser.window
 import kotlin.js.Math
 
 fun main(args: Array<String>) {
@@ -34,6 +36,7 @@ fun main(args: Array<String>) {
         }
         listByRank(graph)
         renderNodesByRank(graph)
+        renderPossibleEdges(graph, possibleEdges)
     }.catchAndLog()
 }
 
@@ -53,6 +56,11 @@ fun renderNodesByRank(graph: Graph) {
     val maxRank = nodesByRank.keys.max() ?: -1
     appElement.append {
         table {
+            tr {
+                th { +"Rank" }
+                th { +"Source" }
+                th { +"Description" }
+            }
             for (rank in 0..maxRank) {
                 val nodes = nodesByRank[rank] ?: emptyList()
                 tr {
@@ -60,10 +68,13 @@ fun renderNodesByRank(graph: Graph) {
                         attributes["rowspan"] = nodes.size.toString()
                         +rank.toString()
                     }
-                    td { +nodes[0].description }
+                    val node = nodes[0]
+                    td { +node.source }
+                    td { +node.description }
                 }
                 for (node in nodes.drop(1)) {
                     tr {
+                        td { +node.source }
                         td { +node.description }
                     }
                 }
@@ -71,6 +82,40 @@ fun renderNodesByRank(graph: Graph) {
         }
     }
 }
+
+fun renderPossibleEdges(graph: Graph, possibleEdges: Collection<Edge>) {
+    val appElement = document.getElementById("app") ?: throw Error("Failed to find app element")
+    val groupedEdges = possibleEdges.groupBy { it.fromId }
+    appElement.append {
+        table {
+            tr {
+                th { +"From" }
+                th { +"To" }
+            }
+            for ((fromId, edges) in groupedEdges) {
+                tr {
+                    th {
+                        attributes["rowspan"] = edges.size.toString()
+                        +getNodeDescription(graph, fromId)
+                    }
+                    val edge = edges[0]
+                    td { +getNodeDescription(graph, edge.toId) }
+                }
+                for (edge in edges.drop(1)) {
+                    tr {
+                        td(classes = "button") {
+                            //onSelectFunction = { it.preventDefault() }
+                            onClickFunction = { window.alert(edge.toPrettyString()) }
+                            +getNodeDescription(graph, edge.toId)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun getNodeDescription(graph: Graph, fromId: String) = graph.findNodeById(fromId)?.description ?: "???"
 
 fun loadGraph(db: PouchDB): Promise<Graph> {
     val g: Graph = Graph()

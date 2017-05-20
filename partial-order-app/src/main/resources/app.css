@@ -16,3 +16,7 @@
 #app table tr th {
     vertical-align: top;
 }
+
+.button {
+    cursor: pointer;
+}

@@ -13,6 +13,7 @@ import org.tameter.partialorder.util.makeGuid
 open class Node(
         doc: NodeDoc
 ) : DocWrapper<NodeDoc>(doc) {
+    val source get() = doc.source
     val description get() = doc.description
 
     // NOTE 2016-04-02 HughG: Normally polymorphic equals is wrong because it ends up being
