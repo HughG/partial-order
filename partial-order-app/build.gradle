@@ -16,9 +16,20 @@ apply plugin: 'kotlin2js'
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
+    //Fill this in with the version of kotlinx in use in your project
+    def kotlinx_html_version = "0.6.3"
+
+    // include for server side
+    // compile "org.jetbrains.kotlinx:kotlinx-html-jvm:${kotlinx_html_version}"
+
+    // include for client-side
+    compile "org.jetbrains.kotlinx:kotlinx-html-js:${kotlinx_html_version}"
+
+    // note: most likely you don't need to include them both
     compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
 }
 
@@ -57,7 +68,8 @@ task deployHtml(type: Copy) {
     into "${projectDir}/web"
     include { fileTreeElement ->
         def path = fileTreeElement.path
-        path.endsWith(".html") && (path.startsWith("META-INF/resources/") || !path.startsWith("META-INF/"))
+        (path.endsWith(".html") || path.endsWith(".css")) &&
+            (path.startsWith("META-INF/resources/") || !path.startsWith("META-INF/"))
     }
 }
 

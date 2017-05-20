@@ -1,5 +1,10 @@
 package org.tameter
 
+import kotlinx.html.dom.append
+import kotlinx.html.table
+import kotlinx.html.td
+import kotlinx.html.th
+import kotlinx.html.tr
 import org.tameter.kotlin.js.promise.Promise
 import org.tameter.kotlin.js.promise.catchAndLog
 import org.tameter.kpouchdb.AllDocsOptions
@@ -7,6 +12,7 @@ import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.*
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
+import kotlin.browser.document
 import kotlin.js.Math
 
 fun main(args: Array<String>) {
@@ -27,6 +33,7 @@ fun main(args: Array<String>) {
             console.log("No edges to add")
         }
         listByRank(graph)
+        renderNodesByRank(graph)
     }.catchAndLog()
 }
 
@@ -37,6 +44,31 @@ fun listByRank(graph: Graph) {
     for (rank in 0..maxRank) {
         val nodes = nodesByRank[rank] ?: emptyList()
         console.info("${rank}: ${nodes.map(Node::description).joinToString()}")
+    }
+}
+
+fun renderNodesByRank(graph: Graph) {
+    val appElement = document.getElementById("app") ?: throw Error("Failed to find app element")
+    val nodesByRank = graph.ranks.keys.groupBy { graph.ranks[it] ?: -1 }
+    val maxRank = nodesByRank.keys.max() ?: -1
+    appElement.append {
+        table {
+            for (rank in 0..maxRank) {
+                val nodes = nodesByRank[rank] ?: emptyList()
+                tr {
+                    th {
+                        attributes["rowspan"] = nodes.size.toString()
+                        +rank.toString()
+                    }
+                    td { +nodes[0].description }
+                }
+                for (node in nodes.drop(1)) {
+                    tr {
+                        td { +node.description }
+                    }
+                }
+            }
+        }
     }
 }
 

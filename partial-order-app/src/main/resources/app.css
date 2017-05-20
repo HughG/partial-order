@@ -1,0 +1,18 @@
+#app table {
+    color: white;
+    background: #EEE;
+}
+
+#app table th {
+    background: silver;
+    padding: 0.25em 0.5em;
+}
+
+#app table td {
+    background: grey;
+    padding: 0.25em;
+}
+
+#app table tr th {
+    vertical-align: top;
+}
