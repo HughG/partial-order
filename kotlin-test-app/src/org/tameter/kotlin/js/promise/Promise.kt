@@ -1,42 +1,25 @@
 package org.tameter.kotlin.js.promise
 
+import org.tameter.kotlin.js.Error
 import org.tameter.kotlin.js.stack
-import kotlin.coroutines.experimental.Continuation
-import kotlin.coroutines.experimental.EmptyCoroutineContext
-import kotlin.coroutines.experimental.startCoroutine
-import kotlin.js.Promise
 
 /**
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
  */
 
 /**
- * See very useful info about (newbie mistakes with) promises at
- *
- * https://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html
+    See very useful info about (newbie mistakes with) promises at
+
+    https://pouchdb.com/2015/05/18/we-have-a-problem-with-promises.html
+
+    TODO 2016-04-01 HughG: Add @CheckReturnValue from FindBugs / JSR 305
  */
-
-/**
- * async and await here are from
- * https://discuss.kotlinlang.org/t/using-coroutines-to-avoid-callback-hell-when-using-xmlhttprequest/2450/3
- */
-fun <T> async(c: suspend () -> T): Promise<T> {
-    return Promise { resolve, reject ->
-        c.startCoroutine(object : Continuation<T> {
-            override fun resume(value: T) = resolve(value)
-
-            override fun resumeWithException(exception: Throwable) = reject(exception)
-
-            override val context = EmptyCoroutineContext
-        })
-    }
+external abstract class Promise<T> {
+    @JsName("then") fun <U> thenV(result: (T) -> U): Promise<U>
+    @JsName("then") fun <U> thenP(result: (T) -> Promise<U>): Promise<U>
+    fun catch(error: (Error) -> Unit): Unit
 }
 
-inline suspend fun <T> Promise<T>.await() = kotlin.coroutines.experimental.suspendCoroutine<T> { c ->
-    then({ c.resume(it) }, { c.resumeWithException(it) })
-}
-
-
-fun <T> Promise<T>.catchAndLog(): Promise<Unit> {
-    return catch { console.log(it.toString() + ": " + it.stack) }
+fun <T> Promise<T>.catchAndLog(): Unit {
+    catch { console.log(it.toString() + ": " + it.stack) }
 }

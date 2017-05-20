@@ -1,18 +1,16 @@
 package org.tameter.partialorder.source
 
-import org.tameter.kotlin.js.promise.async
-import org.tameter.kotlin.js.promise.await
+import org.tameter.kotlin.js.promise.Promise
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.Graph
 import org.tameter.partialorder.dag.GraphEdge
 import org.tameter.partialorder.dag.GraphNode
-import kotlin.js.Promise
 
 /**
  * Copyright (c) 2017 Hugh Greene (githugh@tameter.org).
  */
 class DummyDataSource : Source{
-    override fun populate(db: PouchDB) : Promise<PouchDB> = async {
+    override fun populate(db: PouchDB) : Promise<PouchDB> {
         // We could just create NodeDoc and EdgeDoc instances directly, but putting them in a Graph forces a check that
         // the edges join known nodes.
         val g: Graph = Graph()
@@ -38,10 +36,11 @@ class DummyDataSource : Source{
         dummyGraphObjects.forEach {
             console.log(it)
         }
-        val results = db.bulkDocs(dummyGraphObjects).await()
-        console.log("Bulk store results:")
-        results.forEach { console.log(it) }
-        db
+        return db.bulkDocs(dummyGraphObjects).thenV { results ->
+            console.log("Bulk store results:")
+            results.forEach { console.log(it) }
+            db
+        }
 
         // TODO 2016-04-01 HughG: Should sanity-check for cycles in the graph.
     }

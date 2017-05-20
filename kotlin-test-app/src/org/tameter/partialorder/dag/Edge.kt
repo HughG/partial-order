@@ -1,10 +1,8 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.kotlin.js.promise.async
-import org.tameter.kotlin.js.promise.await
+import org.tameter.kotlin.js.promise.Promise
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
-import kotlin.js.Promise
 
 open class Edge(
     doc: EdgeDoc
@@ -60,12 +58,13 @@ fun Edge(edge: Edge): Edge {
 
 fun Edge.store(
         db: PouchDB
-): Promise<Edge> = async {
-    val result = db.put(doc).await()
-    if (!result.ok) {
-        throw Exception("Failed to store ${doc}")
+): Promise<Edge> {
+    return db.put(doc).thenV { result ->
+        if (!result.ok) {
+            throw Exception("Failed to store ${doc}")
+        }
+        // Update rev to match DB, otherwise we won't be able to store any changes later.
+        doc._rev = result.rev
+        this
     }
-    // Update rev to match DB, otherwise we won't be able to store any changes later.
-    doc._rev = result.rev
-    this
 }

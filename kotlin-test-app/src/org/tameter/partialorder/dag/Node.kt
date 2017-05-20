@@ -1,12 +1,10 @@
 package org.tameter.partialorder.dag
 
-import org.tameter.kotlin.js.promise.async
-import org.tameter.kotlin.js.promise.await
+import org.tameter.kotlin.js.promise.Promise
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.kpouchdb.toStringForExternal
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
 import org.tameter.partialorder.util.makeGuid
-import kotlin.js.Promise
 
 /**
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
@@ -63,12 +61,13 @@ fun Node(node: Node): Node {
 
 fun Node.store(
         db: PouchDB
-): Promise<Node> = async {
-    val result = db.put(doc).await()
-    if (!result.ok) {
-        throw Exception("Failed to store ${doc}")
+): Promise<Node> {
+    return db.put(doc).thenV { result ->
+        if (!result.ok) {
+            throw Exception("Failed to store ${doc}")
+        }
+        // Update rev to match DB, otherwise we won't be able to store any changes later.
+        doc._rev = result.rev
+        this
     }
-    // Update rev to match DB, otherwise we won't be able to store any changes later.
-    doc._rev = result.rev
-    this
 }
