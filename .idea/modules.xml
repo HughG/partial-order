@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/kotlin-test-app/kotlin-test-app.iml" filepath="$PROJECT_DIR$/kotlin-test-app/kotlin-test-app.iml" />
       <module fileurl="file://$PROJECT_DIR$/partial-order.iml" filepath="$PROJECT_DIR$/partial-order.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sandbox/sandbox.iml" filepath="$PROJECT_DIR$/sandbox/sandbox.iml" />
     </modules>
   </component>
 </project>
