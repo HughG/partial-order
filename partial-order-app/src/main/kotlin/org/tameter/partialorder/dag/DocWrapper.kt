@@ -19,7 +19,6 @@ abstract class DocWrapper<TDoc: GraphElementDoc>(
 
         if (_id != other._id) return false
         if (type != other.type) return false
-        if (_rev != other._rev) return false
 
         return true
     }
@@ -27,7 +26,6 @@ abstract class DocWrapper<TDoc: GraphElementDoc>(
     override fun hashCode(): Int{
         var result = _id.hashCode()
         result += 31 * result + type.hashCode()
-        result += 31 * result + _rev.hashCode()
         return result
     }
 }

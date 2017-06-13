@@ -18,12 +18,6 @@ open class Edge(
     // which is relevant to equality.
 
     final override fun equals(other: Any?): Boolean {
-        return doEquals(other).also {
-            console.log("equals($this, $other): $it")
-        }
-    }
-
-    private fun doEquals(other: Any?): Boolean {
         if (this === other) return true
 
         if (other !is Edge) return false
@@ -35,10 +29,6 @@ open class Edge(
     }
 
     final override fun hashCode(): Int {
-        return doHashCode().also { console.log("hashCode is $it for $this") }
-    }
-
-    private fun doHashCode(): Int {
         var result = super.hashCode()
         result += 31 * result + fromId.hashCode()
         result += 31 * result + toId.hashCode()

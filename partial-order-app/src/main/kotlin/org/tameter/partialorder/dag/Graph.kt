@@ -25,16 +25,9 @@ class Graph {
 //        console.info("Caching paths ...")
 
         search(SearchType.DepthFirst) { _/*index*/, _/*depth*/, node, _/*prevEdge*/, prevNode ->
-            var hasPathFromNodeQ = hasPathFrom[node._id]
+            val hasPathFromNode = hasPathFrom.getOrPut(node._id, { mutableListOf() })
 //            console.log("hasPathFromNodeQ = ${hasPathFromNodeQ}")
 //            console.log("hasPathFrom = ${hasPathFrom.entries.joinToString()}")
-            if (hasPathFromNodeQ == null) {
-                hasPathFrom[node._id] = mutableListOf()
-                hasPathFromNodeQ = hasPathFrom[node._id]
-            }
-//            console.log("hasPathFromNodeQ = ${hasPathFromNodeQ}")
-//            console.log("hasPathFrom = ${hasPathFrom.entries.joinToString()}")
-            val hasPathFromNode = hasPathFromNodeQ!!
             if (prevNode != null) {
                 hasPathFromNode.add(prevNode._id)
 //                console.info("Path to ${node._id} from ${prevNode._id}")
@@ -55,13 +48,18 @@ class Graph {
     // Map from a node to all the nodes which have a path to it.
     private val cachedRanks = cached {
         val ranks = mutableMapOf<Node, Int>()
+        nodes.forEach { ranks[it] = 0 }
         console.log("Caching ranks ...")
-        search(SearchType.DepthFirst) { index, depth, node, _/*prevEdge*/, prevNode ->
-            console.log("${index} ${depth} '${node.description}' <- '${prevNode?.description}'")
-            if (!ranks.containsKey(node)) {
-                ranks[node] = depth
+        val edgesFromNode = edges.groupBy { it.from }
+        val nodesToProcess = mutableListOf<Node>().apply { addAll(roots) }
+        while (nodesToProcess.isNotEmpty()) {
+            val fromNode = nodesToProcess.removeAt(0)
+            edgesFromNode[fromNode]?.forEach { edge ->
+                val toNode = edge.to
+                ranks[toNode] = maxOf(ranks[toNode]!!, ranks[fromNode]!! + 1)
+                console.log("${ranks[toNode]} '${toNode.description}' <- '${fromNode.description}'")
+                nodesToProcess.add(toNode)
             }
-            VisitResult.Continue
         }
         console.log("Caching ranks ... done")
         ranks
