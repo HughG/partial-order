@@ -1,7 +1,6 @@
 package org.tameter.kotlin.js.promise
 
-import org.tameter.kotlin.js.Error
-import org.tameter.kotlin.js.stack
+import org.tameter.kotlin.js.logError
 
 /**
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
@@ -21,5 +20,5 @@ external abstract class Promise<T> {
 }
 
 fun <T> Promise<T>.catchAndLog(): Unit {
-    catch { console.log(it.toString() + ": " + it.stack) }
+    catch(::logError)
 }

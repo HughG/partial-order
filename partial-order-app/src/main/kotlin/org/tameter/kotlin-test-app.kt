@@ -6,6 +6,7 @@ import kotlinx.html.table
 import kotlinx.html.td
 import kotlinx.html.th
 import kotlinx.html.tr
+import org.tameter.kotlin.js.logError
 import org.tameter.kotlin.js.promise.catchAndLog
 import org.tameter.kpouchdb.*
 import org.tameter.partialorder.dag.Edge
@@ -20,17 +21,21 @@ import kotlin.browser.document
 import kotlin.browser.window
 
 fun main(args: Array<String>) {
-    val g: Graph = Graph()
-    resetDB().thenV { db ->
-        val graphUpdater = GraphUpdater(db, g)
-        db.liveChanges(ChangeOptions().apply {
-            sinceNow()
-            include_docs = true
-        }).onChange(graphUpdater::handleChange)
-        db
-    }.thenP { db ->
-        GitHubSource("HughG", "partial-order").populate(db)
-    }.catchAndLog()
+    try {
+        val g: Graph = Graph()
+        resetDB().thenV { db ->
+            val graphUpdater = GraphUpdater(db, g)
+            db.liveChanges(ChangeOptions().apply {
+                sinceNow()
+                include_docs = true
+            }).onChange(graphUpdater::handleChange)
+            db
+        }.thenP { db ->
+            GitHubSource("HughG", "partial-order").populate(db)
+        }.catchAndLog()
+    } catch(e: Error) {
+        logError(e)
+    }
 }
 
 class GraphUpdater(val db: PouchDB, val graph: Graph) {
@@ -64,7 +69,7 @@ class GraphUpdater(val db: PouchDB, val graph: Graph) {
             window.setTimeout({
                 needsRender = false
                 render(db, graph)
-            }, 1000)
+            }, 0)
         }
     }
 }

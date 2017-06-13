@@ -4,14 +4,7 @@
 
 package org.tameter.kotlin.js
 
-external class Error(
-        message: String = definedExternally,
-        fileName: String = definedExternally,
-        lineNumber: String = definedExternally
-) {
-    var message: String
-    var name: String
-}
+import kotlin.js.*
 
 var Error.stack: String
     get() {
@@ -21,3 +14,12 @@ var Error.stack: String
     set(value) {
         this.asDynamic().stack = value
     }
+
+fun logError(err: Error) {
+    val errJson = err.unsafeCast<Json>()
+    val errObjectString = err.keys()
+            .map { "${it}: ${errJson[it]}" }
+            .joinToString(prefix = "[", separator = ", ", postfix = "]")
+    console.log("Caught $errObjectString")
+    console.log("${err.message}: ${err.stack}")
+}
