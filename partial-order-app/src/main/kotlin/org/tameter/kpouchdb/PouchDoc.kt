@@ -7,6 +7,7 @@ package org.tameter.kpouchdb
 external interface PouchDoc {
     val _id: String
     var _rev: String
+    var _deleted: Boolean?
     val type: String
 }
 

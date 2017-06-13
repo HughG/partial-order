@@ -6,7 +6,7 @@ package org.tameter.kotlin.js
 
 import kotlin.js.*
 
-var Error.stack: String
+var Throwable.stack: String
     get() {
         val stack = this.asDynamic().stack
         return if (stack == undefined) { "(stack is undefined)" } else { stack }
@@ -15,11 +15,19 @@ var Error.stack: String
         this.asDynamic().stack = value
     }
 
-fun logError(err: Error) {
+fun logError(err: Throwable) {
     val errJson = err.unsafeCast<Json>()
-    val errObjectString = err.keys()
+    val errObjectString = err.objectKeys
             .map { "${it}: ${errJson[it]}" }
             .joinToString(prefix = "[", separator = ", ", postfix = "]")
     console.log("Caught $errObjectString")
     console.log("${err.message}: ${err.stack}")
+}
+
+inline fun doOrLogError(block: () -> Unit) {
+    try {
+        block()
+    } catch (e: Throwable) {
+        logError(e)
+    }
 }

@@ -11,4 +11,4 @@ inline fun <T> jsobject(): T = js("{ return {}; }")
 inline fun <T> jsobject(init: T.() -> Unit): T = jsobject<T>().apply(init)
 
 @Suppress("NOTHING_TO_INLINE")
-inline fun Any.keys(): Array<String> = js("Object").keys(asDynamic())
+inline val Any.objectKeys: Array<String> get() = js("Object").keys(asDynamic())

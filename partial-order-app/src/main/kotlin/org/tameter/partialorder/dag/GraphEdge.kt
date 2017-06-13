@@ -15,8 +15,6 @@ class GraphEdge(
         // Sanity-check existence of from/to nodes by referencing properties
         from
         to
-        // Safe to add to the graph, now that we know the nodes exist.
-        graph.addEdge(this)
     }
 
     override fun toString(): String{

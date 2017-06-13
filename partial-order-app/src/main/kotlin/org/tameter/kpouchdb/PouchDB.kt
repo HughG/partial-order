@@ -32,6 +32,12 @@ external open class PouchDB(name: String, options: PouchDBOptions = definedExter
     fun changes(options: ChangeOptions): ChangeFeed
 }
 
+// PouchDB docs recommend deleting a document this way in case you're using filtered replication.
+fun PouchDB.remove(doc: PouchDoc): Promise<StoreResult> {
+    doc._deleted = true
+    return put(doc)
+}
+
 fun PouchDB.liveChanges(options: ChangeOptions): ChangeFeed {
     options.live = true
     return changes(options)

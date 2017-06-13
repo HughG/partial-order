@@ -1,3 +1,7 @@
+#main {
+    float: left;
+}
+
 #app table {
     color: white;
     background: #EEE;

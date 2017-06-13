@@ -17,7 +17,13 @@ open class Edge(
     // we'll never get any instances of just that class) and the subclasses don't add any state
     // which is relevant to equality.
 
-    final override fun equals(other: Any?): Boolean{
+    final override fun equals(other: Any?): Boolean {
+        return doEquals(other).also {
+            console.log("equals($this, $other): $it")
+        }
+    }
+
+    private fun doEquals(other: Any?): Boolean {
         if (this === other) return true
 
         if (other !is Edge) return false
@@ -28,14 +34,18 @@ open class Edge(
         return super.equals(other)
     }
 
-    final override fun hashCode(): Int{
+    final override fun hashCode(): Int {
+        return doHashCode().also { console.log("hashCode is $it for $this") }
+    }
+
+    private fun doHashCode(): Int {
         var result = super.hashCode()
         result += 31 * result + fromId.hashCode()
         result += 31 * result + toId.hashCode()
         return result
     }
 
-    override fun toString(): String{
+    override fun toString(): String {
         return "Edge(from ${fromId}, to ${toId}, doc ${doc})"
     }
 
