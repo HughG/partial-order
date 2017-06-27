@@ -2,9 +2,9 @@ package org.tameter.partialorder.source
 
 import org.tameter.kotlin.js.promise.Promise
 import org.tameter.kpouchdb.PouchDB
+import org.tameter.partialorder.dag.Edge
 import org.tameter.partialorder.dag.Graph
-import org.tameter.partialorder.dag.GraphEdge
-import org.tameter.partialorder.dag.GraphNode
+import org.tameter.partialorder.dag.Node
 
 /**
  * Copyright (c) 2017 Hugh Greene (githugh@tameter.org).
@@ -14,14 +14,14 @@ class DummyDataSource : Source{
         // We could just create NodeDoc and EdgeDoc instances directly, but putting them in a Graph forces a check that
         // the edges join known nodes.
         val g: Graph = Graph()
-        val readNode = GraphNode(g, "Investigate stuff")
-        val sighNode = GraphNode(g, "Be frustrated at difficulty of new stuff")
-        val grumpNode = GraphNode(g, "Grumble to self about difficulty of new stuff")
-        val us1Node = GraphNode(g, "Understand Promises better")
-        val edge1 = GraphEdge(g, readNode, sighNode).apply {
+        val readNode = Node("Investigate stuff")
+        val sighNode = Node("Be frustrated at difficulty of new stuff")
+        val grumpNode = Node("Grumble to self about difficulty of new stuff")
+        val us1Node = Node("Understand Promises better")
+        val edge1 = Edge(readNode, sighNode).apply {
             //axis_id = "Dependency";
         }
-        val edge2 = GraphEdge(g, sighNode, us1Node).apply {
+        val edge2 = Edge(sighNode, us1Node).apply {
             //axis_id = "Dependency";
         }
         val dummyGraphObjects = arrayOf(

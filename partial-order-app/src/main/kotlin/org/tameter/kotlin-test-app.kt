@@ -6,7 +6,10 @@ import kotlinx.html.js.onClickFunction
 import org.tameter.kotlin.js.doOrLogError
 import org.tameter.kotlin.js.promise.catchAndLog
 import org.tameter.kpouchdb.*
-import org.tameter.partialorder.dag.*
+import org.tameter.partialorder.dag.Edge
+import org.tameter.partialorder.dag.Graph
+import org.tameter.partialorder.dag.Node
+import org.tameter.partialorder.dag.getAllAddableEdges
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
 import org.tameter.partialorder.source.GitHubSource
@@ -45,7 +48,7 @@ class GraphUpdater(val db: PouchDB, val graph: Graph) {
         val doc = change.doc ?: throw Error("Change ${change.id} had no doc")
         when (doc.type) {
             "N" -> {
-                val graphNode = GraphNode(graph, doc.unsafeCast<NodeDoc>())
+                val graphNode = Node(doc.unsafeCast<NodeDoc>())
                 console.log(graphNode.toPrettyString())
                 if (change.deleted) {
                     TODO("graph.removeNode($graphNode)")
@@ -54,7 +57,7 @@ class GraphUpdater(val db: PouchDB, val graph: Graph) {
                 }
             }
             "E" -> {
-                val graphEdge = GraphEdge(graph, doc.unsafeCast<EdgeDoc>())
+                val graphEdge = Edge(doc.unsafeCast<EdgeDoc>())
                 console.log(graphEdge.toPrettyString())
                 if (change.deleted) {
                     graph.removeEdge(graphEdge)

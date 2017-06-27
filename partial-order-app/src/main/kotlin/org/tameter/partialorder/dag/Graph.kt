@@ -7,15 +7,25 @@ import org.tameter.partialorder.util.cached
  */
 
 class Graph {
-    private val _nodes: MutableMap<String, GraphNode> = mutableMapOf()
-    private val _edges: MutableMap<Edge, GraphEdge> = mutableMapOf()
-    val nodes: Collection<GraphNode>
-            get() = _nodes.values
-    val edges: Collection<GraphEdge>
-            get() = _edges.values
+    // --------------------------------------------------------------------------------
+    // <editor-fold desc="Properties">
 
-    fun findNodeById(id: String): GraphNode? = _nodes[id]
-    fun findEdge(edge: Edge): GraphEdge? = _edges[edge]
+    private val _nodes: MutableMap<String, Node> = mutableMapOf()
+    private val _edges: MutableSet<Edge> = mutableSetOf()
+    val nodes: Collection<Node> get() = _nodes.values
+    val edges: Collection<Edge> get() = _edges
+
+    val roots: Collection<Node>
+        get() {
+            // TODO 2016-04-03 HughG: Cache, or update it incrementally.
+            val result = mutableSetOf<Node>()
+            result.addAll(nodes)
+            edges.forEach { result.remove(it.to) }
+//            console.info("Roots are ${result.joinToString { it._id }}")
+            return result
+        }
+
+    fun findNodeById(id: String): Node? = _nodes[id]
 
     // Map from a node to all the nodes which have a path to it.
     private val cachedHasPathFrom = cached {
@@ -70,21 +80,19 @@ class Graph {
     get() {
         return ranks.values.max()
     }
+    // </editor-fold>
+
+    // --------------------------------------------------------------------------------
+    // <editor-fold desc="Methods">
 
     fun addNode(node: Node) {
-        if (node is GraphNode && node.graph != this) {
-            throw Exception("Cannot add node because it belongs to a different graph: ${node}")
-        }
         cachedRanks.clear()
-        _nodes[node._id] = node as? GraphNode ?: GraphNode(this, node)
+        _nodes[node._id] = node
     }
 
     // TODO 2016-04-02 HughG: When implementing removeNode, fail if there are connected edges.
 
     fun addEdge(edge: Edge) {
-        if (edge is GraphEdge && edge.graph != this) {
-            throw Exception("Cannot add edge because it belongs to a different graph: ${edge}")
-        }
         // TODO 2017-06-13 HughG: Return or throw if the edge already exists.
         if (hasPath(edge.toId, edge.fromId)) {
             throw Exception("Cannot add edge because it would create a cycle: ${edge}")
@@ -93,14 +101,11 @@ class Graph {
         // TODO 2016-04-03 HughG: Instead of just deleting the cache, update it incrementally.
         cachedHasPathFrom.clear()
         cachedRanks.clear()
-        _edges[edge] = edge as? GraphEdge ?: GraphEdge(this, edge)
+        _edges.add(edge)
     }
 
-    fun removeEdge(edge: GraphEdge): Boolean {
-        if (edge.graph != this) {
-//            throw Exception("Cannot remove edge because it belongs to a different graph: ${edge}")
-        }
-        val removed = (_edges.remove(edge) != null)
+    fun removeEdge(edge: Edge): Boolean {
+        val removed = _edges.remove(edge)
         if (removed) {// Adding a new edge will change the set of which nodes are reachable from where.
             // TODO 2016-04-03 HughG: Instead of just deleting the cache, update it incrementally.
             cachedHasPathFrom.clear()
@@ -108,23 +113,6 @@ class Graph {
         }
         return removed
     }
-
-//    fun deepClone(): Graph {
-//        val g = Graph()
-//        nodes.forEach { g._nodes.add(GraphNode(g, it)) }
-//        edges.forEach { g._edges.add(GraphEdge(g, it)) }
-//        return g
-//    }
-
-    val roots: Collection<GraphNode>
-        get() {
-            // TODO 2016-04-03 HughG: Cache, or update it incrementally.
-            val result = mutableSetOf<GraphNode>()
-            result.addAll(nodes)
-            edges.forEach { result.remove(it.to) }
-//            console.info("Roots are ${result.joinToString { it._id }}")
-            return result
-        }
 
     fun hasPath(fromId: String, toId: String): Boolean {
         if (fromId == toId) {
@@ -136,7 +124,6 @@ class Graph {
 
     fun hasPath(from: Node, to: Node): Boolean = hasPath(from._id, to._id)
 
-
     fun rank(node: Node): Int {
         return ranks[node] ?: throw Exception("Cannot determine rank of node not in graph: ${node}")
     }
@@ -144,19 +131,37 @@ class Graph {
     fun rankById(id: String): Int? {
         return findNodeById(id)?.let { rank(it) }
     }
+    // </editor-fold>
+
+    // --------------------------------------------------------------------------------
+    // <editor-fold desc="Edge extensions">
+
+    val Edge.from get() = nodeFromGraph("from", doc.fromId)
+    val Edge.to get() = nodeFromGraph("to", doc.toId)
+
+    private fun nodeFromGraph(nodeType: String, nodeId: String): Node {
+        return findNodeById(nodeId) ?: throw Exception("No '${nodeType}' node ${nodeId}")
+    }
+    // </editor-fold>
+
+    // --------------------------------------------------------------------------------
+    // <editor-fold desc="Node extensions">
+
+    val Node.outgoing get() = edges.filter { it.from == this }.toSet()
+    // </editor-fold>
 }
 
 fun Graph.getAllAddableEdges(): Set<Edge> {
-    val allPossibleEdges = mutableSetOf<Edge>()
+    val allAddableEdges = mutableSetOf<Edge>()
 
     // Find set of all possible edges
     for (from in nodes) {
         for (to in nodes) {
             val possibleEdge = Edge(from, to)
             if (!hasPath(to, from) && !edges.contains(possibleEdge)) {
-                allPossibleEdges.add(possibleEdge)
+                allAddableEdges.add(possibleEdge)
             }
         }
     }
-    return allPossibleEdges
+    return allAddableEdges
 }

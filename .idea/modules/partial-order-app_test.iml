@@ -5,7 +5,7 @@
       <configuration version="2" platform="JavaScript " useProjectSettings="false">
         <compilerSettings />
         <compilerArguments>
-          <option name="outputFile" value="C:\Users\hughg\Documents\dev\partial-order\partial-order-app\build\classes\test\partial-order-app_test.js" />
+          <option name="outputFile" value="$MODULE_DIR$/../../partial-order-app/build/classes/test/partial-order-app_test.js" />
           <option name="noStdlib" value="true" />
           <option name="sourceMap" value="true" />
           <option name="metaInfo" value="true" />
@@ -14,13 +14,13 @@
           <option name="main" value="call" />
           <option name="languageVersion" value="1.1" />
           <option name="apiVersion" value="1.1" />
+          <option name="pluginOptions">
+            <array />
+          </option>
           <option name="pluginClasspaths">
             <array />
           </option>
           <option name="coroutinesWarn" value="true" />
-          <option name="pluginOptions">
-            <array />
-          </option>
         </compilerArguments>
       </configuration>
     </facet>

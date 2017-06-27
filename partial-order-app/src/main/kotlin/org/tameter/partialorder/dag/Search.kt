@@ -26,17 +26,17 @@ data class SearchResult (
 
 fun Graph.search(
         searchType: SearchType,
-        fn: (index: Int, depth: Int, node: GraphNode, prevEdge: GraphEdge?, prevNode: GraphNode?) -> VisitResult = {
+        fn: (index: Int, depth: Int, node: Node, prevEdge: Edge?, prevNode: Node?) -> VisitResult = {
             _/*index*/, _/*depth*/, _/*node*/, _/*prevEdge*/, _/*prevNode*/ -> VisitResult.Continue
         }
 ): SearchResult {
-    val queue = mutableListOf<GraphNode>()
-    val connectedNodes = mutableListOf<GraphNode>()
-    val connectedBy = mutableMapOf<String, GraphEdge>()
+    val queue = mutableListOf<Node>()
+    val connectedNodes = mutableListOf<Node>()
+    val connectedBy = mutableMapOf<String, Edge>()
     val id2depth = mutableMapOf<String, Int>()
     val visited = mutableSetOf<String>()
     var index = 0
-    var found: GraphNode? = null
+    var found: Node? = null
 
     // enqueue v
     for (root in roots) {
@@ -83,7 +83,7 @@ fun Graph.search(
             break
         }
 
-        val vwEdges: Collection<GraphEdge> = v.outgoing()
+        val vwEdges: Collection<Edge> = v.outgoing
 //        console.log("Enqueueing ${vwEdges.joinToString {it._id}}")
         for (e in vwEdges) {
             val w = e.to
