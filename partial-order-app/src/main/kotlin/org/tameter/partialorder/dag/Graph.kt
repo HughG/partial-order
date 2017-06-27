@@ -168,18 +168,3 @@ class Graph {
     }
     // </editor-fold>
 }
-
-fun Graph.getAllAddableEdges(): Set<Edge> {
-    val allAddableEdges = mutableSetOf<Edge>()
-
-    // Find set of all possible edges
-    for (from in nodes) {
-        for (to in nodes) {
-            val possibleEdge = Edge(from, to)
-            if (!hasPath(to, from) && !edges.contains(possibleEdge)) {
-                allAddableEdges.add(possibleEdge)
-            }
-        }
-    }
-    return allAddableEdges
-}
