@@ -1,5 +1,6 @@
 package org.tameter.partialorder.dag
 
+import org.tameter.kotlin.collections.MutableMapWithDefault
 import org.tameter.kotlin.collections.MutableMultiSet
 import org.tameter.kotlin.collections.mutableMultiSetOf
 import org.tameter.kotlin.collections.withDefaultValue
@@ -89,19 +90,11 @@ class Graph {
         // Adding a new edge will change the set of which nodes are reachable from where.
         outgoing[fromId].add(edge)
 
-        ancestors[toId].add(fromId)
-        val fromNodeAncestorIds = ancestors[fromId]
-        for (fromNodeAncestorId in fromNodeAncestorIds) {
-            val existingPathsFrom = fromNodeAncestorIds.count(fromNodeAncestorId)
-            ancestors[toId].add(fromNodeAncestorId, existingPathsFrom)
+        fun increment(relativeIds: MutableMultiSet<String>, relativeId: String, count: Int) {
+            relativeIds.add(relativeId, count)
         }
-
-        descendants[fromId].add(toId)
-        val toNodeDescendantIds = descendants[toId]
-        for (toNodeDescendantId in toNodeDescendantIds) {
-            val existingPathsTo = toNodeDescendantIds.count(toNodeDescendantId)
-            descendants[fromId].add(toNodeDescendantId, existingPathsTo)
-        }
+        adjustCountsForRelatives(toId, fromId, ancestors, ::increment)
+        adjustCountsForRelatives(fromId, toId, descendants, ::increment)
 
         // TODO 2016-04-03 HughG: Instead of just deleting the cache, update it incrementally.
         cachedRanks.clear()
@@ -118,22 +111,28 @@ class Graph {
         // Removing an edge will change the set of which nodes are reachable from where.
         outgoing[fromId].remove(edge)
 
-        ancestors[toId].remove(fromId)
-        val fromNodeAncestorIds = ancestors[fromId]
-        for (fromNodeAncestorId in fromNodeAncestorIds) {
-            val existingPathsFrom = fromNodeAncestorIds.count(fromNodeAncestorId)
-            ancestors[toId].remove(fromNodeAncestorId, existingPathsFrom)
+        fun decrement(relativeIds: MutableMultiSet<String>, relativeId: String, count: Int) {
+            relativeIds.remove(relativeId, count)
         }
-
-        descendants[fromId].remove(toId)
-        val toNodeDescendantIds = descendants[toId]
-        for (toNodeDescendantId in toNodeDescendantIds) {
-            val existingPathsTo = toNodeDescendantIds.count(toNodeDescendantId)
-            descendants[fromId].remove(toNodeDescendantId, existingPathsTo)
-        }
+        adjustCountsForRelatives(toId, fromId, ancestors, ::decrement)
+        adjustCountsForRelatives(fromId, toId, descendants, ::decrement)
 
         // TODO 2016-04-03 HughG: Instead of just deleting the cache, update it incrementally.
         cachedRanks.clear()
+    }
+
+    private fun adjustCountsForRelatives(
+            selfId: String,
+            otherId: String,
+            relatives: MutableMapWithDefault<String, MutableMultiSet<String>>,
+            adjust: (MutableMultiSet<String>, String, Int) -> Unit
+    ) {
+        relatives[selfId].add(otherId)
+        val otherNodeRelativeIds = relatives[otherId]
+        for (otherNodeRelativeId in otherNodeRelativeIds) {
+            val existingPaths = otherNodeRelativeIds.count(otherNodeRelativeId)
+            adjust(otherNodeRelativeIds, otherNodeRelativeId, existingPaths)
+        }
     }
 
     fun hasPath(fromId: String, toId: String): Boolean =
