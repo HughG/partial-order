@@ -1,9 +1,12 @@
 package org.tameter.partialorder.dag
 
+import org.tameter.kotlin.collections.MutableMultiSet
+import org.tameter.kotlin.collections.mutableMultiSetOf
+import org.tameter.kotlin.collections.withDefaultValue
 import org.tameter.partialorder.util.cached
 
 /**
- * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
+ * Copyright (c) 2016-2017 Hugh Greene (githugh@tameter.org).
  */
 
 class Graph {
@@ -14,6 +17,13 @@ class Graph {
     private val _edges: MutableSet<Edge> = mutableSetOf()
     val nodes: Collection<Node> get() = _nodes.values
     val edges: Collection<Edge> get() = _edges
+
+    private val outgoing =
+            mutableMapOf<String, MutableSet<Edge>>().withDefaultValue({ mutableSetOf<Edge>() })
+    private val descendants =
+            mutableMapOf<String, MutableMultiSet<String>>().withDefaultValue({ mutableMultiSetOf<String>() })
+    private val ancestors =
+            mutableMapOf<String, MutableMultiSet<String>>().withDefaultValue({ mutableMultiSetOf<String>() })
 
     val roots: Collection<Node>
         get() {
@@ -28,37 +38,11 @@ class Graph {
     fun findNodeById(id: String): Node? = _nodes[id]
 
     // Map from a node to all the nodes which have a path to it.
-    private val cachedHasPathFrom = cached {
-        val hasPathFrom = mutableMapOf<String, MutableCollection<String>>()
-//                .withDefault { mutableListOf() } // doesn't work in JavaScript :-(
-
-//        console.info("Caching paths ...")
-
-        search(SearchType.DepthFirst) { _/*index*/, _/*depth*/, node, _/*prevEdge*/, prevNode ->
-            val hasPathFromNode = hasPathFrom.getOrPut(node._id, { mutableListOf() })
-//            console.log("hasPathFromNodeQ = ${hasPathFromNodeQ}")
-//            console.log("hasPathFrom = ${hasPathFrom.entries.joinToString()}")
-            if (prevNode != null) {
-                hasPathFromNode.add(prevNode._id)
-//                console.info("Path to ${node._id} from ${prevNode._id}")
-                val hasPathsFromPrevNode = hasPathFrom[prevNode._id]!!
-                hasPathFromNode.addAll(hasPathsFromPrevNode)
-//                console.info("Path to ${node._id} from ${hasPathsFromPrevNode.joinToString {it._id}}")
-            }
-
-            VisitResult.Continue
-        }
-
-//        console.info("Caching paths ... done.")
-
-        hasPathFrom
-    }
-    val hasPathFrom by cachedHasPathFrom
-
-    // Map from a node to all the nodes which have a path to it.
     private val cachedRanks = cached {
         val ranks = mutableMapOf<Node, Int>()
-        nodes.forEach { ranks[it] = 0 }
+        for (it in nodes) {
+            ranks[it] = 0
+        }
         console.log("Caching ranks ...")
         val edgesFromNode = edges.groupBy { it.from }
         val nodesToProcess = mutableListOf<Node>().apply { addAll(roots) }
@@ -93,34 +77,67 @@ class Graph {
     // TODO 2016-04-02 HughG: When implementing removeNode, fail if there are connected edges.
 
     fun addEdge(edge: Edge) {
-        // TODO 2017-06-13 HughG: Return or throw if the edge already exists.
-        if (hasPath(edge.toId, edge.fromId)) {
+        val fromId = edge.fromId
+        val toId = edge.toId
+        if (hasPath(toId, fromId)) {
             throw Exception("Cannot add edge because it would create a cycle: ${edge}")
         }
+        if (!_edges.add(edge)) {
+            return
+        }
+
         // Adding a new edge will change the set of which nodes are reachable from where.
+        outgoing[fromId].add(edge)
+
+        ancestors[toId].add(fromId)
+        val fromNodeAncestorIds = ancestors[fromId]
+        for (fromNodeAncestorId in fromNodeAncestorIds) {
+            val existingPathsFrom = fromNodeAncestorIds.count(fromNodeAncestorId)
+            ancestors[toId].add(fromNodeAncestorId, existingPathsFrom)
+        }
+
+        descendants[fromId].add(toId)
+        val toNodeDescendantIds = descendants[toId]
+        for (toNodeDescendantId in toNodeDescendantIds) {
+            val existingPathsTo = toNodeDescendantIds.count(toNodeDescendantId)
+            descendants[fromId].add(toNodeDescendantId, existingPathsTo)
+        }
+
         // TODO 2016-04-03 HughG: Instead of just deleting the cache, update it incrementally.
-        cachedHasPathFrom.clear()
         cachedRanks.clear()
-        _edges.add(edge)
     }
 
-    fun removeEdge(edge: Edge): Boolean {
-        val removed = _edges.remove(edge)
-        if (removed) {// Adding a new edge will change the set of which nodes are reachable from where.
-            // TODO 2016-04-03 HughG: Instead of just deleting the cache, update it incrementally.
-            cachedHasPathFrom.clear()
-            cachedRanks.clear()
-        }
-        return removed
-    }
-
-    fun hasPath(fromId: String, toId: String): Boolean {
-        if (fromId == toId) {
-            return true
+    fun removeEdge(edge: Edge) {
+        if (!_edges.remove(edge)) {
+            return
         }
 
-        return hasPathFrom[toId]?.contains(fromId) ?: false
+        val fromId = edge.fromId
+        val toId = edge.toId
+
+        // Removing an edge will change the set of which nodes are reachable from where.
+        outgoing[fromId].remove(edge)
+
+        ancestors[toId].remove(fromId)
+        val fromNodeAncestorIds = ancestors[fromId]
+        for (fromNodeAncestorId in fromNodeAncestorIds) {
+            val existingPathsFrom = fromNodeAncestorIds.count(fromNodeAncestorId)
+            ancestors[toId].remove(fromNodeAncestorId, existingPathsFrom)
+        }
+
+        descendants[fromId].remove(toId)
+        val toNodeDescendantIds = descendants[toId]
+        for (toNodeDescendantId in toNodeDescendantIds) {
+            val existingPathsTo = toNodeDescendantIds.count(toNodeDescendantId)
+            descendants[fromId].remove(toNodeDescendantId, existingPathsTo)
+        }
+
+        // TODO 2016-04-03 HughG: Instead of just deleting the cache, update it incrementally.
+        cachedRanks.clear()
     }
+
+    fun hasPath(fromId: String, toId: String): Boolean =
+            (fromId == toId) || descendants[fromId].contains(toId)
 
     fun hasPath(from: Node, to: Node): Boolean = hasPath(from._id, to._id)
 
@@ -147,7 +164,9 @@ class Graph {
     // --------------------------------------------------------------------------------
     // <editor-fold desc="Node extensions">
 
-    val Node.outgoing get() = edges.filter { it.from == this }.toSet()
+    val Node.outgoing: Set<Edge> get() {
+        return this@Graph.outgoing[_id]
+    }
     // </editor-fold>
 }
 
