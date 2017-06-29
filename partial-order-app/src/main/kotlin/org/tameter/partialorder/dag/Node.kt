@@ -10,7 +10,7 @@ import org.tameter.partialorder.util.makeGuid
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
  */
 
-open class Node(
+class Node(
         doc: NodeDoc
 ) : DocWrapper<NodeDoc>(doc) {
     val source get() = doc.source

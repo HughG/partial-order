@@ -5,14 +5,14 @@ import org.tameter.kpouchdb.Change
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.kpouchdb.toStringForExternal
 import org.tameter.partialorder.dag.Edge
-import org.tameter.partialorder.dag.Graph
+import org.tameter.partialorder.dag.MultiGraph
 import org.tameter.partialorder.dag.Node
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
 import org.tameter.partialorder.ui.view.render
 import kotlin.browser.window
 
-class GraphUpdater(val db: PouchDB, val graph: Graph) {
+class GraphUpdater(val db: PouchDB, val graphs: MultiGraph) {
     private var needsRender = false
 
     fun handleChange(change: Change) = doOrLogError {
@@ -30,16 +30,22 @@ class GraphUpdater(val db: PouchDB, val graph: Graph) {
                 if (change.deleted) {
                     TODO("graph.removeNode($graphNode)")
                 } else {
-                    graph.addNode(graphNode)
+                    graphs.addNode(graphNode)
                 }
             }
             "E" -> {
                 val graphEdge = Edge(doc.unsafeCast<EdgeDoc>())
                 console.log(graphEdge.toPrettyString())
-                if (change.deleted) {
-                    graph.removeEdge(graphEdge)
+                val graphId = graphEdge.graphId
+                val graph = graphs.findGraphById(graphId)
+                if (graph == null) {
+                    console.error("Unknown graph $graphId")
                 } else {
-                    graph.addEdge(graphEdge)
+                    if (change.deleted) {
+                        graph.removeEdge(graphEdge)
+                    } else {
+                        graph.addEdge(graphEdge)
+                    }
                 }
             }
             else -> {
@@ -54,7 +60,7 @@ class GraphUpdater(val db: PouchDB, val graph: Graph) {
             needsRender = true
             window.setTimeout({
                 needsRender = false
-                render(db, graph)
+                render(db, graphs)
             }, 0)
         }
     }

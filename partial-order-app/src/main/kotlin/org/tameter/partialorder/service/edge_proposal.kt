@@ -2,13 +2,18 @@ package org.tameter.partialorder.service
 
 import org.tameter.partialorder.dag.Edge
 import org.tameter.partialorder.dag.Graph
+import org.tameter.partialorder.dag.MultiGraph
 import kotlin.js.Math
 
-fun proposeEdges(graph: Graph): Collection<Edge> {
-    return sortEdges(graph, graph.getAllAddableEdges())
+fun proposeEdges(graphs: MultiGraph, nodeCombinedRanks: Map<String, Int>): Collection<Edge> {
+    val allGraphsAddableEdges = graphs.graphs.flatMapTo(HashSet<Edge>(), Graph::getAllAddableEdges)
+    return sortEdges(allGraphsAddableEdges, nodeCombinedRanks)
 }
 
-private fun sortEdges(graph: Graph, allPossibleEdges: Set<Edge>): Collection<Edge> {
+private fun sortEdges(
+        allPossibleEdges: Set<Edge>,
+        nodeCombinedRanks: Map<String, Int>
+): Collection<Edge> {
     // Group edges by "from node rank", then within that by "to node rank", but randomise each inner list.  This means
     // that the user is given edges in an order which will tend to push nodes out of lower ranks (due to the outer,
     // sorted grouping) but also tend to introduce edges between nodes which will end up (after many edges are added)
@@ -17,7 +22,7 @@ private fun sortEdges(graph: Graph, allPossibleEdges: Set<Edge>): Collection<Edg
     // "deep" graph so that nodes quickly become more strongly ordered.
 
     fun Iterable<Edge>.groupByRank(getNodeId: (Edge) -> String): LinkedHashMap<Int, MutableList<Edge>> {
-        return groupByTo(LinkedHashMap<Int, MutableList<Edge>>()) { graph.rankById(getNodeId(it))!! }
+        return groupByTo(LinkedHashMap<Int, MutableList<Edge>>()) { nodeCombinedRanks[getNodeId(it)]!! }
     }
 
     fun removeSameOrHigherRankedReverseEdges(edgesByFromRank: LinkedHashMap<Int, MutableList<Edge>>) {
@@ -85,9 +90,8 @@ fun Graph.getAllAddableEdges(): Set<Edge> {
     // Find set of all possible edges
     for (from in nodes) {
         for (to in nodes) {
-            val possibleEdge = Edge(from, to)
-            if (!hasPath(to, from) && !edges.contains(possibleEdge)) {
-                allAddableEdges.add(possibleEdge)
+            if (!hasPath(to, from) && !from.hasEdgeTo(to)) {
+                allAddableEdges.add(Edge(this, from, to))
             }
         }
     }

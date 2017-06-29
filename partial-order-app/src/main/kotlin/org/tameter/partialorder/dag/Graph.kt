@@ -10,13 +10,12 @@ import org.tameter.partialorder.util.cached
  * Copyright (c) 2016-2017 Hugh Greene (githugh@tameter.org).
  */
 
-class Graph {
+class Graph(val id: String, val owner: MultiGraph) {
     // --------------------------------------------------------------------------------
     // <editor-fold desc="Properties">
 
-    private val _nodes: MutableMap<String, Node> = mutableMapOf()
     private val _edges: MutableSet<Edge> = mutableSetOf()
-    val nodes: Collection<Node> get() = _nodes.values
+    val nodes: Collection<Node> get() = owner.nodes
     val edges: Collection<Edge> get() = _edges
 
     private val outgoing =
@@ -35,8 +34,6 @@ class Graph {
 //            console.info("Roots are ${result.joinToString { it._id }}")
             return result
         }
-
-    fun findNodeById(id: String): Node? = _nodes[id]
 
     // Map from a node to all the nodes which have a path to it.
     private val cachedRanks = cached {
@@ -70,14 +67,19 @@ class Graph {
     // --------------------------------------------------------------------------------
     // <editor-fold desc="Methods">
 
-    fun addNode(node: Node) {
+    fun findNodeById(id: String): Node? = owner.findNodeById(id)
+
+    fun nodeAdded(node: Node) {
         cachedRanks.clear()
-        _nodes[node._id] = node
     }
 
     // TODO 2016-04-02 HughG: When implementing removeNode, fail if there are connected edges.
 
     fun addEdge(edge: Edge) {
+        if (edge.graphId != id) {
+            throw IllegalArgumentException("Graph mismatch adding $edge to $id")
+        }
+
         val fromId = edge.fromId
         val toId = edge.toId
         if (hasPath(toId, fromId)) {
@@ -101,6 +103,10 @@ class Graph {
     }
 
     fun removeEdge(edge: Edge) {
+        if (edge.graphId != id) {
+            throw IllegalArgumentException("Graph mismatch removing $edge from $id")
+        }
+
         if (!_edges.remove(edge)) {
             return
         }
@@ -152,8 +158,8 @@ class Graph {
     // --------------------------------------------------------------------------------
     // <editor-fold desc="Edge extensions">
 
-    val Edge.from get() = nodeFromGraph("from", doc.fromId)
-    val Edge.to get() = nodeFromGraph("to", doc.toId)
+    val Edge.from get() = nodeFromGraph("from", fromId)
+    val Edge.to get() = nodeFromGraph("to", toId)
 
     private fun nodeFromGraph(nodeType: String, nodeId: String): Node {
         return findNodeById(nodeId) ?: throw Exception("No '${nodeType}' node ${nodeId}")
@@ -166,5 +172,7 @@ class Graph {
     val Node.outgoing: Set<Edge> get() {
         return this@Graph.outgoing[_id]
     }
+
+    fun Node.hasEdgeTo(to: Node) = outgoing.any { it.to == to }
     // </editor-fold>
 }

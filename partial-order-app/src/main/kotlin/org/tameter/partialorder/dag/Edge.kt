@@ -2,34 +2,34 @@ package org.tameter.partialorder.dag
 
 import org.tameter.kotlin.js.promise.Promise
 import org.tameter.kpouchdb.PouchDB
+import org.tameter.kpouchdb.StoreResult
+import org.tameter.kpouchdb.remove
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 
-open class Edge(
-    doc: EdgeDoc
+class Edge(
+        doc: EdgeDoc
 ) : DocWrapper<EdgeDoc>(doc) {
     //    var axis_id: String
 
+    val graphId get() = doc.graphId
     val fromId get() = doc.fromId
     val toId get() = doc.toId
 
-    // NOTE 2016-04-02 HughG: Normally polymorphic equals is wrong because it ends up being
-    // non-commutative.  However, in this case it's okay because the base class is abstract (so
-    // we'll never get any instances of just that class) and the subclasses don't add any state
-    // which is relevant to equality.
-
-    final override fun equals(other: Any?): Boolean {
+    override fun equals(other: Any?): Boolean {
         if (this === other) return true
 
         if (other !is Edge) return false
 
+        if (graphId != other.graphId) return false
         if (fromId != other.fromId) return false
         if (toId != other.toId) return false
 
         return super.equals(other)
     }
 
-    final override fun hashCode(): Int {
-        var result = super.hashCode()
+    override fun hashCode(): Int {
+        var result = 0
+        result += 31 * result + graphId.hashCode()
         result += 31 * result + fromId.hashCode()
         result += 31 * result + toId.hashCode()
         return result
@@ -42,13 +42,24 @@ open class Edge(
     override fun toPrettyString(): String {
         return "Edge ${fromId} to ${toId}"
     }
+
+    fun reverse() = Edge(graphId, toId, fromId)
 }
 
 fun Edge(
+        graph: Graph,
         from: Node,
         to: Node
 ): Edge {
-    return Edge(EdgeDoc(from.doc._id, to.doc._id))
+    return Edge(EdgeDoc(graph.id, from.doc._id, to.doc._id))
+}
+
+fun Edge(
+        graphId: String,
+        fromId: String,
+        toId: String
+): Edge {
+    return Edge(EdgeDoc(graphId, fromId, toId))
 }
 
 // Copy constructor (also copies the doc)
@@ -67,4 +78,10 @@ fun Edge.store(
         doc._rev = result.rev
         this
     }
+}
+
+fun Edge.remove(
+        db: PouchDB
+): Promise<StoreResult> {
+    return db.remove(doc)
 }

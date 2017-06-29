@@ -4,20 +4,16 @@ import kotlinx.html.*
 import kotlinx.html.dom.append
 import kotlinx.html.js.onClickFunction
 import org.tameter.kpouchdb.PouchDB
-import org.tameter.kpouchdb.remove
-import org.tameter.partialorder.dag.Edge
-import org.tameter.partialorder.dag.Graph
-import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
+import org.tameter.partialorder.dag.*
 import org.tameter.partialorder.service.proposeEdges
 import org.w3c.dom.Element
 import kotlin.browser.document
 
-fun render(db: PouchDB, graph: Graph) {
+fun render(db: PouchDB, graphs: MultiGraph) {
     val appElement = document.getElementById("app") ?: throw Error("Failed to find app element")
     while (appElement.firstChild != null) {
         appElement.removeChild(appElement.firstChild!!)
     }
-    val proposedEdges = proposeEdges(graph)
     appElement.append {
         div {
             div {
@@ -28,14 +24,20 @@ fun render(db: PouchDB, graph: Graph) {
             div { id = "proposedEdges" }
         }
     }
-    renderNodesByRank(document.getElementById("nodes")!!, graph)
-    renderEdges(document.getElementById("edges")!!, db, graph)
-    renderProposedEdges(document.getElementById("proposedEdges")!!, db, graph, proposedEdges)
+    val nodeCombinedRanks = getCombinedRanks(graphs)
+    val nodesByCombinedRank = graphs.nodes.groupBy { nodeCombinedRanks[it._id]!! }
+    renderNodesByRank(document.getElementById("nodes")!!, nodesByCombinedRank)
+    renderEdges(document.getElementById("edges")!!, db, graphs)
+    val proposedEdges = proposeEdges(graphs, nodeCombinedRanks)
+    renderProposedEdges(document.getElementById("proposedEdges")!!, db, graphs, proposedEdges, nodeCombinedRanks)
 }
 
-fun renderNodesByRank(element: Element, graph: Graph) {
-    val nodesByRank = graph.ranks.keys.groupBy { graph.ranks[it] ?: -1 }
-    val maxRank = nodesByRank.keys.max() ?: -1
+fun getCombinedRanks(graphs: MultiGraph): Map<String, Int> {
+    return graphs.nodes.associate { node -> node._id to graphs.graphs.map { g -> g.rank(node) }.sum() }
+}
+
+fun renderNodesByRank(element: Element, nodesByCombinedRank: Map<Int, List<Node>>) {
+    val maxRank = nodesByCombinedRank.keys.max() ?: -1
     element.append {
         table {
             tr {
@@ -44,7 +46,7 @@ fun renderNodesByRank(element: Element, graph: Graph) {
                 th { +"Description" }
             }
             for (rank in 0..maxRank) {
-                val nodes = nodesByRank[rank] ?: emptyList()
+                val nodes = nodesByCombinedRank[rank] ?: emptyList()
                 tr {
                     th {
                         attributes["rowspan"] = nodes.size.toString()
@@ -65,34 +67,44 @@ fun renderNodesByRank(element: Element, graph: Graph) {
     }
 }
 
-fun renderEdges(element: Element, db: PouchDB, graph: Graph) {
+fun renderEdges(element: Element, db: PouchDB, graphs: MultiGraph) {
     element.append {
         table {
             tr {
-                th {
-                    attributes["colspan"] = "2"
-                    +"From"
-                }
-                th {
-                    attributes["colspan"] = "2"
-                    +"To"
-                }
-                th {
-                    +"Remove"
+                for (graph in graphs.graphs) {
+                    td { renderEdges(this, db, graph) }
                 }
             }
-            for (edge in graph.edges) {
-                tr {
-                    td { +graph.rankById(edge.fromId).toString() }
-                    td { +getNodeDescription(graph, edge.fromId) }
-                    td { +graph.rankById(edge.toId).toString() }
-                    td { +getNodeDescription(graph, edge.toId) }
-                    td(classes = "button") {
-                        +"[X]"
-                        onClickFunction = {
-                            console.log(edge.toPrettyString())
-                            db.remove(edge.doc)
-                        }
+        }
+    }
+}
+
+fun renderEdges(element: HtmlBlockTag, db: PouchDB, graph: Graph) {
+    element.table {
+        tr {
+            th {
+                attributes["colspan"] = "2"
+                +"From"
+            }
+            th {
+                attributes["colspan"] = "2"
+                +"To"
+            }
+            th {
+                +"Remove"
+            }
+        }
+        for (edge in graph.edges) {
+            tr {
+                td { +graph.rankById(edge.fromId).toString() }
+                td { +getNodeDescription(graph, edge.fromId) }
+                td { +graph.rankById(edge.toId).toString() }
+                td { +getNodeDescription(graph, edge.toId) }
+                td(classes = "button") {
+                    +"[X]"
+                    onClickFunction = {
+                        console.log(edge.toPrettyString())
+                        edge.remove(db)
                     }
                 }
             }
@@ -100,10 +112,19 @@ fun renderEdges(element: Element, db: PouchDB, graph: Graph) {
     }
 }
 
-fun renderProposedEdges(element: Element, db: PouchDB, graph: Graph, possibleEdges: Collection<Edge>) {
+fun renderProposedEdges(
+        element: Element,
+        db: PouchDB,
+        graphs: MultiGraph,
+        possibleEdges: Collection<Edge>,
+        nodeCombinedRanks: Map<String, Int>
+) {
     element.append {
         table {
             tr {
+                th {
+                    +"Axis"
+                }
                 th {
                     attributes["colspan"] = "2"
                     +"From"
@@ -114,21 +135,23 @@ fun renderProposedEdges(element: Element, db: PouchDB, graph: Graph, possibleEdg
                 }
             }
             for (edge in possibleEdges) {
+                val graph = graphs.findGraphById(edge.graphId)!!
                 tr {
-                    td { +graph.rankById(edge.fromId).toString() }
+                    td { +graph.id }
+                    td { +nodeCombinedRanks[edge.fromId].toString() }
                     td(classes = "button") {
                         +getNodeDescription(graph, edge.fromId)
                         onClickFunction = {
                             console.log(edge.toPrettyString())
-                            db.put(EdgeDoc(edge.fromId, edge.toId))
+                            edge.store(db)
                         }
                     }
-                    td { +graph.rankById(edge.toId).toString() }
+                    td { +nodeCombinedRanks[edge.toId].toString() }
                     td(classes = "button") {
                         +getNodeDescription(graph, edge.toId)
                         onClickFunction = {
                             console.log(edge.toPrettyString())
-                            db.put(EdgeDoc(edge.toId, edge.fromId))
+                            edge.reverse().store(db)
                         }
                     }
                 }
