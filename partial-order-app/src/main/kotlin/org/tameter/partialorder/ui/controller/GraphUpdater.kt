@@ -5,15 +5,16 @@ import org.tameter.kotlin.js.doOrLogError
 import org.tameter.kpouchdb.Change
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.kpouchdb.toStringForExternal
+import org.tameter.partialorder.dag.CompositeScoring
 import org.tameter.partialorder.dag.Edge
-import org.tameter.partialorder.dag.MultiGraph
+import org.tameter.partialorder.dag.Graph
 import org.tameter.partialorder.dag.Node
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
 import org.tameter.partialorder.ui.view.render
 import kotlin.browser.window
 
-class GraphUpdater(val db: PouchDB, val graphs: MultiGraph) {
+class GraphUpdater(val db: PouchDB, val graphs: CompositeScoring) {
     private var needsRender = false
 
     fun handleChange(change: Change) = doOrLogError {
@@ -35,18 +36,20 @@ class GraphUpdater(val db: PouchDB, val graphs: MultiGraph) {
                 }
             }
             "E" -> {
-                val graphEdge = Edge(doc.unsafeCast<EdgeDoc>())
-                console.log(graphEdge.toPrettyString())
-                val graphId = graphEdge.graphId
-                val graph = graphs.findGraphById(graphId)
-                if (graph == null) {
-                    console.error("Unknown graph $graphId")
-                } else {
-                    if (change.deleted) {
-                        graph.removeEdge(graphEdge)
-                    } else {
-                        graph.addEdge(graphEdge)
+                val edge = Edge(doc.unsafeCast<EdgeDoc>())
+                console.log(edge.toPrettyString())
+                val graphId = edge.graphId
+                val graph = graphs.findScoringById(graphId)
+                when (graph) {
+                    is Graph -> {
+                        if (change.deleted) {
+                            graph.removeEdge(edge)
+                        } else {
+                            graph.addEdge(edge)
+                        }
                     }
+                    null -> console.error("Unknown graph $graphId")
+                    else -> console.error("Scoring $graphId exists but is not a graph; cannot add $edge")
                 }
             }
             else -> {

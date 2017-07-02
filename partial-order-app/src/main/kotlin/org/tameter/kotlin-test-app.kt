@@ -6,16 +6,18 @@ import org.tameter.kpouchdb.ChangeOptions
 import org.tameter.kpouchdb.liveChanges
 import org.tameter.kpouchdb.onChange
 import org.tameter.kpouchdb.sinceNow
+import org.tameter.partialorder.dag.CompositeScoring
 import org.tameter.partialorder.dag.Graph
-import org.tameter.partialorder.dag.MultiGraph
-import org.tameter.partialorder.source.GitHubSource
+import org.tameter.partialorder.source.DummyDataSource
 import org.tameter.partialorder.ui.controller.GraphUpdater
 
 fun main(args: Array<String>) {
     doOrLogError {
-        val graphs = MultiGraph().apply {
-            addGraph("importance")
-            addGraph("urgency")
+        val graphs = CompositeScoring("root").apply {
+             addScoring(Graph("importance"))
+             addScoring(Graph("fun"))
+             addScoring(Graph("interesting"))
+             addScoring(Graph("non-scary"))
         }
         resetDB().thenV { db ->
             val graphUpdater = GraphUpdater(db, graphs)
@@ -25,7 +27,8 @@ fun main(args: Array<String>) {
             }).onChange(graphUpdater::handleChange)
             db
         }.thenP { db ->
-            GitHubSource("HughG", "partial-order").populate(db)
+            DummyDataSource().populate(db)
+//            GitHubSource("HughG", "partial-order").populate(db)
         }.catchAndLog()
     }
 }

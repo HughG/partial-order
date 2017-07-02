@@ -4,13 +4,16 @@ import org.tameter.kotlin.collections.MutableMapWithDefault
 import org.tameter.kotlin.collections.MutableMultiSet
 import org.tameter.kotlin.collections.mutableMultiSetOf
 import org.tameter.kotlin.collections.withDefaultValue
+import org.tameter.kotlin.delegates.setOnce
+import org.tameter.partialorder.scoring.NodeSet
+import org.tameter.partialorder.scoring.Scoring
 import org.tameter.partialorder.util.cached
 
 /**
  * Copyright (c) 2016-2017 Hugh Greene (githugh@tameter.org).
  */
 
-class Graph(val id: String, val owner: MultiGraph) {
+class Graph(override val id: String) : Scoring {
     // --------------------------------------------------------------------------------
     // <editor-fold desc="Properties">
 
@@ -41,7 +44,7 @@ class Graph(val id: String, val owner: MultiGraph) {
         for (it in nodes) {
             ranks[it] = 0
         }
-        console.log("Caching ranks ...")
+        console.log("Caching ranks for $id ...")
         val edgesFromNode = edges.groupBy { it.from }
         val nodesToProcess = mutableListOf<Node>().apply { addAll(roots) }
         while (nodesToProcess.isNotEmpty()) {
@@ -54,24 +57,38 @@ class Graph(val id: String, val owner: MultiGraph) {
             }
         }
         console.log("Caching ranks ... done")
-        ranks
+        ranks as Map<Node, Int>
     }
     val ranks by cachedRanks
 
     val maxRank: Int?
-    get() {
-        return ranks.values.max()
+        get() {
+            return ranks.values.max()
+        }
+    // </editor-fold>
+
+    // --------------------------------------------------------------------------------
+    // <editor-fold desc="Scoring implementation">
+
+    override var owner: NodeSet by setOnce()
+        private set
+
+    override fun setOwner(owner: NodeSet) {
+        this.owner = owner
     }
+
+    override fun nodeAdded(node: Node) {
+        cachedRanks.clear()
+    }
+
+    override fun score(node: Node): Int {
+        return ranks[node] ?: throw Exception("Cannot determine rank of node not in graph: ${node}")
+    }
+
     // </editor-fold>
 
     // --------------------------------------------------------------------------------
     // <editor-fold desc="Methods">
-
-    fun findNodeById(id: String): Node? = owner.findNodeById(id)
-
-    fun nodeAdded(node: Node) {
-        cachedRanks.clear()
-    }
 
     // TODO 2016-04-02 HughG: When implementing removeNode, fail if there are connected edges.
 
@@ -145,14 +162,6 @@ class Graph(val id: String, val owner: MultiGraph) {
             (fromId == toId) || descendants[fromId].contains(toId)
 
     fun hasPath(from: Node, to: Node): Boolean = hasPath(from._id, to._id)
-
-    fun rank(node: Node): Int {
-        return ranks[node] ?: throw Exception("Cannot determine rank of node not in graph: ${node}")
-    }
-
-    fun rankById(id: String): Int? {
-        return findNodeById(id)?.let { rank(it) }
-    }
     // </editor-fold>
 
     // --------------------------------------------------------------------------------
@@ -162,7 +171,7 @@ class Graph(val id: String, val owner: MultiGraph) {
     val Edge.to get() = nodeFromGraph("to", toId)
 
     private fun nodeFromGraph(nodeType: String, nodeId: String): Node {
-        return findNodeById(nodeId) ?: throw Exception("No '${nodeType}' node ${nodeId}")
+        return owner.findNodeById(nodeId) ?: throw Exception("No '${nodeType}' node ${nodeId}")
     }
     // </editor-fold>
 

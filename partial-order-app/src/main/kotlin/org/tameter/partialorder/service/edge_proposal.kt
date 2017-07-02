@@ -1,19 +1,14 @@
 package org.tameter.partialorder.service
 
+import org.tameter.partialorder.dag.CompositeScoring
 import org.tameter.partialorder.dag.Edge
 import org.tameter.partialorder.dag.Graph
-import org.tameter.partialorder.dag.MultiGraph
 import kotlin.js.Math
 
-fun proposeEdges(graphs: MultiGraph, nodeCombinedRanks: Map<String, Int>): Collection<Edge> {
-    val allGraphsAddableEdges = graphs.graphs.flatMapTo(HashSet<Edge>(), Graph::getAllAddableEdges)
-    return sortEdges(allGraphsAddableEdges, nodeCombinedRanks)
-}
+fun proposeEdges(compositeScoring: CompositeScoring): Collection<Edge> {
+    val allGraphsAddableEdges =
+            compositeScoring.scorings.filterIsInstance<Graph>().flatMapTo(HashSet<Edge>(), Graph::getAllAddableEdges)
 
-private fun sortEdges(
-        allPossibleEdges: Set<Edge>,
-        nodeCombinedRanks: Map<String, Int>
-): Collection<Edge> {
     // Group edges by "from node rank", then within that by "to node rank", but randomise each inner list.  This means
     // that the user is given edges in an order which will tend to push nodes out of lower ranks (due to the outer,
     // sorted grouping) but also tend to introduce edges between nodes which will end up (after many edges are added)
@@ -22,7 +17,7 @@ private fun sortEdges(
     // "deep" graph so that nodes quickly become more strongly ordered.
 
     fun Iterable<Edge>.groupByRank(getNodeId: (Edge) -> String): LinkedHashMap<Int, MutableList<Edge>> {
-        return groupByTo(LinkedHashMap<Int, MutableList<Edge>>()) { nodeCombinedRanks[getNodeId(it)]!! }
+        return groupByTo(LinkedHashMap<Int, MutableList<Edge>>()) { compositeScoring.scoreById(getNodeId(it))!! }
     }
 
     fun removeSameOrHigherRankedReverseEdges(edgesByFromRank: LinkedHashMap<Int, MutableList<Edge>>) {
@@ -55,7 +50,7 @@ private fun sortEdges(
         return result
     }
 
-    return allPossibleEdges.groupByRank(Edge::fromId)
+    return allGraphsAddableEdges.groupByRank(Edge::fromId)
             .sortedByKey()
             .apply(::removeSameOrHigherRankedReverseEdges)
             .values

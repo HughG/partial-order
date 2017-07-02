@@ -5,11 +5,12 @@ import kotlinx.html.dom.append
 import kotlinx.html.js.onClickFunction
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.*
+import org.tameter.partialorder.scoring.Scoring
 import org.tameter.partialorder.service.proposeEdges
 import org.w3c.dom.Element
 import kotlin.browser.document
 
-fun render(db: PouchDB, graphs: MultiGraph) {
+fun render(db: PouchDB, scoring: CompositeScoring) {
     val appElement = document.getElementById("app") ?: throw Error("Failed to find app element")
     while (appElement.firstChild != null) {
         appElement.removeChild(appElement.firstChild!!)
@@ -24,16 +25,11 @@ fun render(db: PouchDB, graphs: MultiGraph) {
             div { id = "proposedEdges" }
         }
     }
-    val nodeCombinedRanks = getCombinedRanks(graphs)
-    val nodesByCombinedRank = graphs.nodes.groupBy { nodeCombinedRanks[it._id]!! }
+    val nodesByCombinedRank = scoring.nodes.groupBy { scoring.score(it) }
     renderNodesByRank(document.getElementById("nodes")!!, nodesByCombinedRank)
-    renderEdges(document.getElementById("edges")!!, db, graphs)
-    val proposedEdges = proposeEdges(graphs, nodeCombinedRanks)
-    renderProposedEdges(document.getElementById("proposedEdges")!!, db, graphs, proposedEdges, nodeCombinedRanks)
-}
-
-fun getCombinedRanks(graphs: MultiGraph): Map<String, Int> {
-    return graphs.nodes.associate { node -> node._id to graphs.graphs.map { g -> g.rank(node) }.sum() }
+    renderEdges(document.getElementById("edges")!!, db, scoring)
+    val proposedEdges = proposeEdges(scoring)
+    renderProposedEdges(document.getElementById("proposedEdges")!!, db, scoring, proposedEdges)
 }
 
 fun renderNodesByRank(element: Element, nodesByCombinedRank: Map<Int, List<Node>>) {
@@ -45,7 +41,7 @@ fun renderNodesByRank(element: Element, nodesByCombinedRank: Map<Int, List<Node>
                 th { +"Description" }
             }
             for (rank in nodesByCombinedRank.keys.sorted()) {
-                val nodes = nodesByCombinedRank[rank] ?: continue
+                val nodes = nodesByCombinedRank[rank]!!
                 if (nodes.isEmpty()) {
                     console.warn("Empty node list for rank $rank")
                     continue
@@ -70,11 +66,11 @@ fun renderNodesByRank(element: Element, nodesByCombinedRank: Map<Int, List<Node>
     }
 }
 
-fun renderEdges(element: Element, db: PouchDB, graphs: MultiGraph) {
+fun renderEdges(element: Element, db: PouchDB, graphs: CompositeScoring) {
     element.append {
         table {
             tr {
-                for (graph in graphs.graphs) {
+                for (graph in graphs.scorings.filterIsInstance<Graph>()) {
                     td { renderEdges(this, db, graph) }
                 }
             }
@@ -99,9 +95,9 @@ fun renderEdges(element: HtmlBlockTag, db: PouchDB, graph: Graph) {
         }
         for (edge in graph.edges) {
             tr {
-                td { +graph.rankById(edge.fromId).toString() }
+                td { +graph.scoreById(edge.fromId).toString() }
                 td { +getNodeDescription(graph, edge.fromId) }
-                td { +graph.rankById(edge.toId).toString() }
+                td { +graph.scoreById(edge.toId).toString() }
                 td { +getNodeDescription(graph, edge.toId) }
                 td(classes = "button") {
                     +"[X]"
@@ -118,9 +114,8 @@ fun renderEdges(element: HtmlBlockTag, db: PouchDB, graph: Graph) {
 fun renderProposedEdges(
         element: Element,
         db: PouchDB,
-        graphs: MultiGraph,
-        possibleEdges: Collection<Edge>,
-        nodeCombinedRanks: Map<String, Int>
+        compositeScoring: CompositeScoring,
+        possibleEdges: Collection<Edge>
 ) {
     element.append {
         table {
@@ -138,20 +133,20 @@ fun renderProposedEdges(
                 }
             }
             for (edge in possibleEdges) {
-                val graph = graphs.findGraphById(edge.graphId)!!
+                val scoring = compositeScoring.findScoringById(edge.graphId)!!
                 tr {
-                    td { +graph.id }
-                    td { +nodeCombinedRanks[edge.fromId].toString() }
+                    td { +scoring.id }
+                    td { +compositeScoring.scoreById(edge.fromId).toString() }
                     td(classes = "button") {
-                        +getNodeDescription(graph, edge.fromId)
+                        +getNodeDescription(scoring, edge.fromId)
                         onClickFunction = {
                             console.log(edge.toPrettyString())
                             edge.store(db)
                         }
                     }
-                    td { +nodeCombinedRanks[edge.toId].toString() }
+                    td { +compositeScoring.scoreById(edge.toId).toString() }
                     td(classes = "button") {
-                        +getNodeDescription(graph, edge.toId)
+                        +getNodeDescription(scoring, edge.toId)
                         onClickFunction = {
                             console.log(edge.toPrettyString())
                             edge.reverse().store(db)
@@ -163,4 +158,4 @@ fun renderProposedEdges(
     }
 }
 
-private fun getNodeDescription(graph: Graph, fromId: String) = graph.findNodeById(fromId)?.description ?: "???"
+private fun getNodeDescription(graph: Scoring, fromId: String) = graph.owner.findNodeById(fromId)?.description ?: "???"

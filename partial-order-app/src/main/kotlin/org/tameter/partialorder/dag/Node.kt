@@ -38,7 +38,7 @@ class Node(
     }
 
     override fun toString(): String{
-        return "GraphNode(doc ${doc.toStringForExternal()})"
+        return "Node(doc ${doc.toStringForExternal()})"
     }
 
     override fun toPrettyString(): String {
