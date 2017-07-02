@@ -1,5 +1,6 @@
 package org.tameter.partialorder.ui.controller
 
+import org.tameter.kotlin.browser.setTimeoutLoggingErrors
 import org.tameter.kotlin.js.doOrLogError
 import org.tameter.kpouchdb.Change
 import org.tameter.kpouchdb.PouchDB
@@ -58,10 +59,10 @@ class GraphUpdater(val db: PouchDB, val graphs: MultiGraph) {
     fun ensureRender() {
         if (!needsRender) {
             needsRender = true
-            window.setTimeout({
+            window.setTimeoutLoggingErrors {
                 needsRender = false
                 render(db, graphs)
-            }, 0)
+            }
         }
     }
 }

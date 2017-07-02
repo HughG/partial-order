@@ -37,7 +37,6 @@ fun getCombinedRanks(graphs: MultiGraph): Map<String, Int> {
 }
 
 fun renderNodesByRank(element: Element, nodesByCombinedRank: Map<Int, List<Node>>) {
-    val maxRank = nodesByCombinedRank.keys.max() ?: -1
     element.append {
         table {
             tr {
@@ -45,8 +44,12 @@ fun renderNodesByRank(element: Element, nodesByCombinedRank: Map<Int, List<Node>
                 th { +"Source" }
                 th { +"Description" }
             }
-            for (rank in 0..maxRank) {
-                val nodes = nodesByCombinedRank[rank] ?: emptyList()
+            for (rank in nodesByCombinedRank.keys.sorted()) {
+                val nodes = nodesByCombinedRank[rank] ?: continue
+                if (nodes.isEmpty()) {
+                    console.warn("Empty node list for rank $rank")
+                    continue
+                }
                 tr {
                     th {
                         attributes["rowspan"] = nodes.size.toString()
