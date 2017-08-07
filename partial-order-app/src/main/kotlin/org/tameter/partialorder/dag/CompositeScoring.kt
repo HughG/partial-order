@@ -65,9 +65,9 @@ class CompositeScoring(override val id: String) : NodeSet, Scoring {
     // --------------------------------------------------------------------------------
     // <editor-fold desc="Scoring implementation">
 
-    override val owner: NodeSet = this
+    override val owner: CompositeScoring = this
 
-    override fun setOwner(owner: NodeSet) {
+    override fun setOwner(owner: CompositeScoring) {
         throw IllegalStateException("Root scoring object is its own owner")
     }
 
@@ -79,6 +79,9 @@ class CompositeScoring(override val id: String) : NodeSet, Scoring {
         return scores[node] ?: throw Exception("Cannot determine score of node not in node set: ${node}")
     }
 
+    fun scoreChanged(id: String) {
+        cachedScores.clear()
+    }
     // </editor-fold>
 
 }

@@ -5,7 +5,6 @@ import org.tameter.kotlin.collections.MutableMultiSet
 import org.tameter.kotlin.collections.mutableMultiSetOf
 import org.tameter.kotlin.collections.withDefaultValue
 import org.tameter.kotlin.delegates.setOnce
-import org.tameter.partialorder.scoring.NodeSet
 import org.tameter.partialorder.scoring.Scoring
 import org.tameter.partialorder.util.cached
 
@@ -70,10 +69,10 @@ class Graph(override val id: String) : Scoring {
     // --------------------------------------------------------------------------------
     // <editor-fold desc="Scoring implementation">
 
-    override var owner: NodeSet by setOnce()
+    override var owner: CompositeScoring by setOnce()
         private set
 
-    override fun setOwner(owner: NodeSet) {
+    override fun setOwner(owner: CompositeScoring) {
         this.owner = owner
     }
 
@@ -117,6 +116,7 @@ class Graph(override val id: String) : Scoring {
 
         // TODO 2016-04-03 HughG: Instead of just deleting the cache, update it incrementally.
         cachedRanks.clear()
+        owner.scoreChanged(id)
     }
 
     fun removeEdge(edge: Edge) {

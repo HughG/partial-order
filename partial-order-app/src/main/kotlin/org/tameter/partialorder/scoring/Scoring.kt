@@ -1,5 +1,6 @@
 package org.tameter.partialorder.scoring
 
+import org.tameter.partialorder.dag.CompositeScoring
 import org.tameter.partialorder.dag.Node
 
 /**
@@ -8,8 +9,8 @@ import org.tameter.partialorder.dag.Node
 interface Scoring {
     val id: String
 
-    val owner: NodeSet
-    fun setOwner(owner: NodeSet)
+    val owner: CompositeScoring
+    fun setOwner(owner: CompositeScoring)
 
     fun nodeAdded(node: Node)
 

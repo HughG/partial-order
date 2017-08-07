@@ -9,6 +9,7 @@ import org.tameter.kpouchdb.sinceNow
 import org.tameter.partialorder.dag.CompositeScoring
 import org.tameter.partialorder.dag.Graph
 import org.tameter.partialorder.source.DummyDataSource
+import org.tameter.partialorder.source.GitHubSource
 import org.tameter.partialorder.ui.controller.GraphUpdater
 
 fun main(args: Array<String>) {
@@ -27,8 +28,8 @@ fun main(args: Array<String>) {
             }).onChange(graphUpdater::handleChange)
             db
         }.thenP { db ->
-            DummyDataSource().populate(db)
-//            GitHubSource("HughG", "partial-order").populate(db)
+            //DummyDataSource().populate(db)
+            GitHubSource("HughG", "partial-order").populate(db)
         }.catchAndLog()
     }
 }
