@@ -1,13 +1,12 @@
 package org.tameter.partialorder.dag
 
 import org.tameter.kpouchdb.PouchDoc
-import org.tameter.partialorder.dag.kpouchdb.GraphElementDoc
 
 /**
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
  */
 
-abstract class DocWrapper<out TDoc: GraphElementDoc>(
+abstract class DocWrapper<out TDoc: PouchDoc>(
         internal val doc: TDoc
 ) : PouchDoc by doc {
     abstract fun toPrettyString(): String

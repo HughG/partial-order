@@ -1,17 +1,19 @@
 package org.tameter.partialorder.dag.kpouchdb
 
+import org.tameter.kpouchdb.PouchDoc
+
 /**
  * Copyright (c) 2016-2017 Hugh Greene (githugh@tameter.org).
  */
 
-external interface EdgeDoc : GraphElementDoc {
+external interface EdgeDoc : PouchDoc {
     val graphId: String
     val fromId: String
     val toId: String
 }
 
 fun EdgeDoc(_id: String, graphId: String, fromId: String, toId: String): EdgeDoc {
-    return GraphElementDoc<EdgeDoc>(_id, "E").apply {
+    return PouchDoc<Any>(_id, "E").apply {
         this.asDynamic().graphId = graphId
         this.asDynamic().fromId = fromId
         this.asDynamic().toId = toId
