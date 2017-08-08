@@ -4,7 +4,7 @@ import org.tameter.partialorder.source.RedmineSourceSpec
 
 external interface RedmineSourceSpecDoc : SourceSpecDoc, RedmineSourceSpec
 
-const val REDMINE_SOURCE_SPEC_DOC_TYPE = "redmine"
+val REDMINE_SOURCE_SPEC_DOC_TYPE = "${SOURCE_SPEC_DOC_TYPE}_redmine"
 
 fun RedmineSourceSpecDoc(
         description: String,
@@ -13,7 +13,7 @@ fun RedmineSourceSpecDoc(
         apiKey: String? = null
 ): RedmineSourceSpecDoc {
     return SourceSpecDoc<RedmineSourceSpecDoc>(
-            "redmine:${url}:projectId=${projectId}",
+            "${url}:projectId=${projectId}",
             REDMINE_SOURCE_SPEC_DOC_TYPE,
             description
     ).apply {

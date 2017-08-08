@@ -2,6 +2,8 @@ package org.tameter.partialorder.source.kpouchdb
 
 import org.tameter.kpouchdb.PouchDoc
 
+val SOURCE_SPEC_DOC_TYPE: String = "Spec"
+
 external interface SourceSpecDoc : PouchDoc {
     val description: String
 }

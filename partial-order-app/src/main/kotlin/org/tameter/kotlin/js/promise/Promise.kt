@@ -13,10 +13,9 @@ import org.tameter.kotlin.js.logError
 
     TODO 2016-04-01 HughG: Add @CheckReturnValue from FindBugs / JSR 305
  */
-external abstract class Promise<T> {
+external class Promise<out T> : kotlin.js.Promise<T> {
     @JsName("then") fun <U> thenV(result: (T) -> U): Promise<U>
-    @JsName("then") fun <U> thenP(result: (T) -> Promise<U>): Promise<U>
-    fun catch(error: (Error) -> Unit): Unit
+    @JsName("then") fun <U> thenP(result: (T) -> kotlin.js.Promise<U>): Promise<U>
 }
 
 fun <T> Promise<T>.catchAndLog(): Unit {
