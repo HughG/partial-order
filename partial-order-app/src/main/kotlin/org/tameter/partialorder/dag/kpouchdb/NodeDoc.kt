@@ -16,7 +16,7 @@ fun NodeDoc.toStringForExternal(): String {
 }
 
 fun NodeDoc(source: String, description: String): NodeDoc {
-    return PouchDoc<Any>(source, "N").apply {
+    return PouchDoc<NodeDoc>(source, "N").apply {
         this.asDynamic().source = source
         this.asDynamic().description = description
     }

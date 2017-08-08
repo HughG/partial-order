@@ -13,7 +13,7 @@ external interface EdgeDoc : PouchDoc {
 }
 
 fun EdgeDoc(_id: String, graphId: String, fromId: String, toId: String): EdgeDoc {
-    return PouchDoc<Any>(_id, "E").apply {
+    return PouchDoc<EdgeDoc>(_id, "E").apply {
         this.asDynamic().graphId = graphId
         this.asDynamic().fromId = fromId
         this.asDynamic().toId = toId
