@@ -17,18 +17,19 @@ external interface GitHubIssue {
     val title: String
 }
 
-class GitHubSource(
-        val user: String,
-        val repo: String
-) : Source {
+external interface GitHubSourceSpec {
+    val user: String
+    val repo: String
+}
 
+class GitHubSource(val spec: GitHubSourceSpec) : Source {
     override fun populate(db: PouchDB) : Promise<PouchDB> {
         return jQuery.getJSON(
-                "https://api.github.com/repos/${user}/${repo}/issues"
+                "https://api.github.com/repos/${spec.user}/${spec.repo}/issues"
         ).then({ data: Any, _: String, _: JQueryXHR ->
             val issues = data.unsafeCast<Array<GitHubIssue>>()
             val issueDocs: Array<NodeDoc> = issues.map {
-                NodeDoc("github:${repo}/${user}/${it.number}", it.title)
+                NodeDoc("github:${spec.repo}/${spec.user}/${it.number}", it.title)
             }.toTypedArray()
             console.log("Bulk store inputs:")
             issueDocs.forEach { console.log(it) }
