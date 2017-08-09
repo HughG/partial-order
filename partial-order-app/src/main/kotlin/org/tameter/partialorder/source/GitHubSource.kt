@@ -22,28 +22,41 @@ external interface GitHubSourceSpec {
     val repo: String
 }
 
+// From https://developer.github.com/v3/#pagination, the maximum page size is 100
+// Recursively request pages until we have found all issues
+const val perPageRequestsGitHub = 100
+
 class GitHubSource(val spec: GitHubSourceSpec) : Source {
-    override fun populate(db: PouchDB) : Promise<PouchDB> {
+    override fun populate(db: PouchDB): Promise<PouchDB> {
+        return doPopulate(db = db, page = 0)
+
+        // TODO 2016-04-01 HughG: Should sanity-check for cycles in the graph.
+    }
+
+    private fun doPopulate(db: PouchDB, page: Int): Promise<PouchDB> {
         return jQuery.getJSON(
-                "https://api.github.com/repos/${spec.user}/${spec.repo}/issues"
+                queryURL(page)
         ).then({ data: Any, _: String, _: JQueryXHR ->
             val issues = data.unsafeCast<Array<GitHubIssue>>()
             val issueDocs: Array<NodeDoc> = issues.map {
                 NodeDoc("github:${spec.repo}/${spec.user}/${it.number}", it.title)
             }.toTypedArray()
-            console.log("Bulk store inputs:")
+            console.log("GitHub bulk store inputs, page ${page}:")
             issueDocs.forEach { console.log(it) }
             issueDocs
         }).toPouchDB().thenP {
             db.bulkDocs(it)
-        }.thenV { results ->
-            console.log("Bulk store results:")
+        }.thenP { results ->
+            console.log("GitHub bulk store results, page ${page}")
             results.forEach { console.log(it) }
-            db
+
+            if(results.size < perPageRequestsGitHub) {
+                kotlin.js.Promise.resolve(db)
+            } else {
+                doPopulate(db, page + 1)
+            }
         }
-
-        // TODO 2016-04-01 HughG: Should sanity-check for cycles in the graph.
-
-        // TODO 2017-05-13 HughG: Deal with pagination from GitHub APIs: https://developer.github.com/v3/#pagination
     }
+
+    private fun queryURL(page: Int) = "https://api.github.com/repos/${spec.user}/${spec.repo}/issues?page=${page}&per_page=${perPageRequestsGitHub}"
 }
