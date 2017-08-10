@@ -23,6 +23,8 @@ dependencies {
     //Fill this in with the version of kotlinx in use in your project
     def kotlinx_html_version = "0.6.3"
 
+    def yested_version = '1.0-alpha-2'
+
     // include for server side
     // compile "org.jetbrains.kotlinx:kotlinx-html-jvm:${kotlinx_html_version}"
 
@@ -31,6 +33,9 @@ dependencies {
 
     // note: most likely you don't need to include them both
     compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
+
+    // local maven-installed Yested_fw
+    compile "net.yested:Yested:$yested_version"
 }
 
 

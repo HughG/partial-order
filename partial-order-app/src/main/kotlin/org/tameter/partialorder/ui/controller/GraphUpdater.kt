@@ -11,10 +11,14 @@ import org.tameter.partialorder.dag.Graph
 import org.tameter.partialorder.dag.Node
 import org.tameter.partialorder.dag.kpouchdb.EdgeDoc
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
-import org.tameter.partialorder.ui.view.render
+import org.tameter.partialorder.ui.view.AppUI
 import kotlin.browser.window
 
 class GraphUpdater(val db: PouchDB, val graphs: CompositeScoring) {
+    init {
+        AppUI.activeTabProperty.onNext { ensureRender() }
+    }
+
     private var needsRender = false
 
     fun handleChange(change: Change) = doOrLogError {
@@ -64,7 +68,7 @@ class GraphUpdater(val db: PouchDB, val graphs: CompositeScoring) {
             needsRender = true
             window.setTimeoutLoggingErrors {
                 needsRender = false
-                render(db, graphs)
+                AppUI.render(db, graphs)
             }
         }
     }
