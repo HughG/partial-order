@@ -1,0 +1,44 @@
+<!-- NOTE 2017-08-10 HughG: Adapted from https://github.com/Azure-Samples/active-directory-javascript-graphapi-v2/archive/master.zip -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Outlook (Office 365)</title>
+    <script src="js/pouchdb-6.1.2.js"></script>
+    <script src="js/jquery-3.2.1.js"></script>
+
+    <!-- BEGIN Try Outlook stuff -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- END Try Outlook stuff -->
+
+    <link href="app.css" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- BEGIN Try Outlook stuff -->
+<button id="callGraphButton" type="button" class="btn btn-primary">Call Microsoft Graph API</button>
+<div id="errorMessage" class="text-danger"></div>
+<div class="hidden">
+    <h3>Graph API Call Response</h3>
+    <pre class="well" id="graphResponse"></pre>
+</div>
+<div class="hidden">
+    <h3>Access Token</h3>
+    <pre class="well" id="accessToken"></pre>
+</div>
+<div class="hidden">
+    <h3>ID Token Claims</h3>
+    <pre class="well" id="userInfo"></pre>
+</div>
+<button id="signOutButton" type="button" class="btn btn-primary hidden">Sign out</button>
+
+<script src="https://secure.aadcdn.microsoftonline-p.com/lib/0.1.1/js/msal.min.js"></script>
+<!-- END Try Outlook stuff -->
+
+<div id="app"></div>
+<script src="js/kotlin.js"></script>
+<script src="js/kotlinx-html-js.js"></script>
+<script src="js/partial-order-app_main.js"></script>
+</body>
+</html>
