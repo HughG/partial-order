@@ -41,6 +41,11 @@ class CompositeScoring(override val id: String) : NodeSet, Scoring {
         _scorings[scoring.id] = scoring
     }
 
+    fun removeNode(node: Node) {
+        _nodes.remove(node._id)
+        this.scoreChanged(node._id)
+    }
+
     override fun addNode(node: Node) {
         _nodes[node._id] = node
         for (scoring in scorings) {

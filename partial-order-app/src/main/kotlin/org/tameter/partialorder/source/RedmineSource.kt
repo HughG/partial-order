@@ -5,6 +5,7 @@ import org.tameter.kotlin.js.promise.Promise
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.kpouchdb.NodeDoc
 import org.tameter.partialorder.lib.jquery.*
+import org.tameter.partialorder.source.kpouchdb.RedmineSourceSpecDoc
 import kotlin.js.json
 
 external interface RedmineIssue {
@@ -29,7 +30,7 @@ external interface RedmineSourceSpec {
 // We use this keyword to recursively request until we have all issues
 const val perRedmineRequestLimit = 100
 
-class RedmineSource(val spec: RedmineSourceSpec) : Source {
+class RedmineSource(val spec: RedmineSourceSpecDoc) : Source {
 
     override fun populate(db: PouchDB): Promise<PouchDB> {
         return doPopulate(db = db, pageNumber = 0)
@@ -51,6 +52,8 @@ class RedmineSource(val spec: RedmineSourceSpec) : Source {
         }
     }
 
+    override val sourceId = "${spec.url}/issues"
+
     // Perform the Redmine REST API request for a page of open issues, and convert these into NodeDoc format
     private fun makeRequest(pageNumber: Int): Promise<Array<NodeDoc>> {
         return jQuery.get(jsobject<JQueryAjaxSettings> {
@@ -60,9 +63,10 @@ class RedmineSource(val spec: RedmineSourceSpec) : Source {
             }
             url = queryUrl(pageNumber)
         }).then({ data: Any, _: String, _: JQueryXHR ->
+
             val issues = data.unsafeCast<RedmineIssueResponse>().issues
             val issueDocs: Array<NodeDoc> = issues.map {
-                NodeDoc("${spec.url}/issues/${it.id}", it.subject)
+                NodeDoc(sourceId, spec._id, spec.description, it.id, it.subject)
             }.toTypedArray()
             issueDocs
         }).toPouchDB()

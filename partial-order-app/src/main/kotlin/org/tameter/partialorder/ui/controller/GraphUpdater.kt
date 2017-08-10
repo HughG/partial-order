@@ -34,7 +34,7 @@ class GraphUpdater(val db: PouchDB, val graphs: CompositeScoring) {
                 val graphNode = Node(doc.unsafeCast<NodeDoc>())
                 console.log(graphNode.toPrettyString())
                 if (change.deleted) {
-                    TODO("graph.removeNode($graphNode)")
+                    graphs.removeNode(graphNode)
                 } else {
                     graphs.addNode(graphNode)
                 }

@@ -8,6 +8,9 @@ import org.tameter.kpouchdb.toStringForExternal
  */
 external interface NodeDoc : PouchDoc {
     val source: String
+    val sourceId: String
+    val sourceDescription: String
+    val index: Long
     val description: String
 }
 
@@ -15,13 +18,17 @@ fun NodeDoc.toStringForExternal(): String {
     return "${this.unsafeCast<PouchDoc>().toStringForExternal()}, description: ${description}"
 }
 
-fun NodeDoc(source: String, description: String): NodeDoc {
-    return PouchDoc<NodeDoc>(source, "N").apply {
+fun NodeDoc(source: String, sourceId: String, sourceDescription: String, index: Long, description: String): NodeDoc {
+    val id = "${source}/${index}"
+    return PouchDoc<NodeDoc>(id, "N").apply {
         this.asDynamic().source = source
+        this.asDynamic().sourceId = sourceId
+        this.asDynamic().sourceDescription = sourceDescription
+        this.asDynamic().index = index
         this.asDynamic().description = description
     }
 }
 
 fun NodeDoc(doc: NodeDoc): NodeDoc {
-    return NodeDoc(doc.source, doc.description)
+    return NodeDoc(doc.source, doc.sourceId, doc.sourceDescription, doc.index, doc.description)
 }
