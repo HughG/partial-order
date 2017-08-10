@@ -35,9 +35,7 @@ fun main(args: Array<String>) {
                 include_docs = true
             }).onChange(graphUpdater::handleChange)
         }.thenP {
-            // TODO 2017-08-08 HughG: Consider how to use liveChanges to read all existing config, plus later changes.
-            // TODO 2017-08-08 HughG: Consider how cope with dynamically adding and removing sources.
-            databases.configDatabase.allDocs<SourceSpecDoc>(jsobject<AllDocsOptions> {
+            databases.configDatabase.allDocs<SourceSpecDoc>(jsobject {
                 include_docs = true
                 startkey = SOURCE_SPEC_DOC_TYPE
                 endkey = SOURCE_SPEC_DOC_TYPE + '\uFFFF'
@@ -45,6 +43,9 @@ fun main(args: Array<String>) {
         }.thenP { results ->
             loadSourceSpecs(databases.scoringDatabase, results.rows, 0, results.rows.size)
         }.thenV {
+            // TODO 2017-08-10 HughG: Maybe we should set up the liveChanges handler before doing the initial allDocs
+            // call.  As it stands, if configs are added/removed between the allDocs and liveChanges calls, they will be
+            // missed, I think.
             databases.configDatabase.liveChanges(ChangeOptions().apply {
                 sinceNow()
                 include_docs = true
@@ -54,22 +55,21 @@ fun main(args: Array<String>) {
 }
 
 private fun configChangedHandler(db: PouchDB): (Change) -> Unit {
-
-    fun closure(change: Change) = doOrLogError {
-        val doc = change.doc
-        if(doc != null) {
-            // Always remove, and re-add if added/altered
-            removeSourceSpec(db, doc)
-            if (!change.deleted) {
-                loadSourceSpec(db, doc)
+    return { change: Change ->
+        doOrLogError {
+            val doc = change.doc
+            if (doc != null) {
+                // Always remove, and re-add if added/altered
+                removeSourceSpec(db, doc)
+                if (!change.deleted) {
+                    loadSourceSpec(db, doc)
+                }
             }
         }
     }
-
-    return ::closure
 }
 
-private fun downcastSourceSpec(doc: PouchDoc): Source {
+private fun makeSource(doc: PouchDoc): Source {
     @Suppress("UNCHECKED_CAST_TO_NATIVE_INTERFACE")
     return when (doc.type) {
         GITHUB_SOURCE_SPEC_DOC_TYPE -> GitHubSource(doc as GitHubSourceSpecDoc)
@@ -82,13 +82,14 @@ private fun loadSourceSpec(
         scoringDatabase: PouchDB,
         doc: PouchDoc
 ): Promise<PouchDB>
-        = downcastSourceSpec(doc).populate(scoringDatabase)
+        = makeSource(doc).populate(scoringDatabase)
 
 private fun removeSourceSpec(
     scoringDatabase: PouchDB,
     specDoc: PouchDoc
 ): Promise<PouchDB> {
-    return scoringDatabase.allDocs<NodeDoc>(jsobject<AllDocsOptions> {
+    // TODO 2017-08-10 HughG: See if there's a more efficient way to do this -- some kind of filtering.
+    return scoringDatabase.allDocs<NodeDoc>(jsobject {
         include_docs = true
     }).thenV { results ->
         results.rows.forEach {

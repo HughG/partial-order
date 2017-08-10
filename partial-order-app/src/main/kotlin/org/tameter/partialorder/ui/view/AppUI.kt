@@ -20,15 +20,14 @@ import kotlin.dom.appendText
 
 object AppUI {
 
-    val activeTabProperty = Property("Default")
-    private val defaultTab = "Nodes"
+    private const val DEFAULT_TAB_NAME = "Nodes"
+    val activeTabProperty = Property(DEFAULT_TAB_NAME)
     private val appElement = document.getElementById("app") as HTMLElement? ?: throw Error("Failed to find app element")
 
     init {
         fun NavbarMenu.navBarItem(name: String): Any {
 
             fun isActiveTab() = activeTabProperty.get() == name
-                    || (activeTabProperty.get() == "Default" && defaultTab == name)
 
             val active = Property(isActiveTab())
             activeTabProperty.onNext { active.set(isActiveTab()) }
@@ -46,7 +45,7 @@ object AppUI {
                 navbar.addClass("my-custom-navbar")
                 brand {
                     appendText("Partial Order Application")
-                    onclick = { activeTabProperty.set("Default") }
+                    onclick = { activeTabProperty.set(DEFAULT_TAB_NAME) }
                 }
                 menu {
                     navBarItem("Nodes")
@@ -70,7 +69,7 @@ object AppUI {
         }
 
         when (activeTabProperty.get()) {
-            "Nodes", "Default" -> {
+            "Nodes", -> {
                 val nodesByCombinedRank = scoring.nodes.groupBy { scoring.score(it) }
                 renderNodesByRank(container, nodesByCombinedRank)
             }

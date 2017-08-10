@@ -16,16 +16,12 @@ class Node(
     val source get() = "${doc.sourceDescription}: ${doc.index}"
     val description get() = doc.description
 
-    // NOTE 2016-04-02 HughG: Normally polymorphic equals is wrong because it ends up being
-    // non-commutative.  However, in this case it's okay because the base class is abstract (so
-    // we'll never get any instances of just that class) and the subclasses don't add any state
-    // which is relevant to equality.
-
     override fun equals(other: Any?): Boolean{
         if (this === other) return true
 
         if (other !is Node) return false
 
+        if (source != other.source) return false
         if (description != other.description) return false
 
         return super.equals(other)
@@ -33,6 +29,7 @@ class Node(
 
     override fun hashCode(): Int{
         var result = super.hashCode()
+        result += 31 * result + source.hashCode()
         result += 31 * result + description.hashCode()
         return result
     }
@@ -42,18 +39,9 @@ class Node(
     }
 
     override fun toPrettyString(): String {
-        return "Node ${_id}: ${description}"
+        return "Node ${source}: ${description}"
     }
 }
-
-//fun Node(
-//        description: String
-//): Node {
-//    val doc = NodeDoc(makeGuid(), description)
-//    val node = Node(doc)
-////    console.log(node.toString())
-//    return node
-//}
 
 // Copy constructor (also copies the doc)
 fun Node(node: Node): Node {

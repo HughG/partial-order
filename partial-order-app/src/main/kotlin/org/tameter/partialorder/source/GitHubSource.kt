@@ -25,7 +25,7 @@ external interface GitHubSourceSpec {
 
 // From https://developer.github.com/v3/#pagination, the maximum page size is 100
 // Recursively request pages until we have found all issues
-const val perPageRequestsGitHub = 100
+private const val PAGE_SIZE_LIMIT = 100
 
 class GitHubSource(val spec: GitHubSourceSpecDoc) : Source {
     override fun populate(db: PouchDB): Promise<PouchDB> {
@@ -41,20 +41,23 @@ class GitHubSource(val spec: GitHubSourceSpecDoc) : Source {
                 queryURL(page)
         ).then({ data: Any, _: String, _: JQueryXHR ->
             val issues = data.unsafeCast<Array<GitHubIssue>>()
-
             val issueDocs: Array<NodeDoc> = issues.map {
                 NodeDoc(sourceId, spec._id, spec.description, it.number, it.title)
             }.toTypedArray()
             console.log("GitHub bulk store inputs, page ${page}:")
-            issueDocs.forEach { console.log(it) }
+            for (it in issueDocs) {
+                console.log(it)
+            }
             issueDocs
         }).toPouchDB().thenP {
             db.bulkDocs(it)
         }.thenP { results ->
             console.log("GitHub bulk store results, page ${page}")
-            results.forEach { console.log(it) }
+            for (it in results) {
+                console.log(it)
+            }
 
-            if(results.size < perPageRequestsGitHub) {
+            if (results.size < PAGE_SIZE_LIMIT) {
                 kotlin.js.Promise.resolve(db)
             } else {
                 doPopulate(db, page + 1)
@@ -62,5 +65,6 @@ class GitHubSource(val spec: GitHubSourceSpecDoc) : Source {
         }
     }
 
-    private fun queryURL(page: Int) = "https://api.github.com/repos/${spec.user}/${spec.repo}/issues?page=${page}&per_page=${perPageRequestsGitHub}"
+    private fun queryURL(page: Int) =
+            "https://api.github.com/repos/${spec.user}/${spec.repo}/issues?page=${page}&per_page=${PAGE_SIZE_LIMIT}"
 }

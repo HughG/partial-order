@@ -7,6 +7,7 @@ import org.tameter.kpouchdb.toStringForExternal
  * Copyright (c) 2016 Hugh Greene (githugh@tameter.org).
  */
 external interface NodeDoc : PouchDoc {
+    // TODO 2017-08-10 HughG: Need to document what these mean!
     val source: String
     val sourceId: String
     val sourceDescription: String

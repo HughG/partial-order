@@ -28,7 +28,7 @@ external interface RedmineSourceSpec {
 // Later versions allow the administrator to increase this maximum
 // The 'offset' keyword allows us to skip a number of issues
 // We use this keyword to recursively request until we have all issues
-const val perRedmineRequestLimit = 100
+private const val PAGE_SIZE_LIMIT    = 100
 
 class RedmineSource(val spec: RedmineSourceSpecDoc) : Source {
 
@@ -38,13 +38,14 @@ class RedmineSource(val spec: RedmineSourceSpecDoc) : Source {
 
     // Recursively populate database with requests until all pages are found
     private fun doPopulate(db: PouchDB, pageNumber: Int): Promise<PouchDB> {
-        return makeRequest(pageNumber)
-                .thenP {
-                    db.bulkDocs(it)
-                }.thenP { results ->
+        return makeRequest(pageNumber).thenP {
+            db.bulkDocs(it)
+        }.thenP { results ->
             console.log("Redmine bulk store results, page ${pageNumber}:")
-            results.forEach { console.log(it) }
-            if(results.size < perRedmineRequestLimit) {
+            for (it in results) {
+                console.log(it)
+            }
+            if (results.size < PAGE_SIZE_LIMIT) {
                 kotlin.js.Promise.resolve(db)
             } else {
                 doPopulate(db, pageNumber + 1)
@@ -54,7 +55,7 @@ class RedmineSource(val spec: RedmineSourceSpecDoc) : Source {
 
     override val sourceId = "${spec.url}/issues"
 
-    // Perform the Redmine REST API request for a page of open issues, and convert these into NodeDoc format
+    // Perform the Redmine REST API request for a page of open issues, and convert these into NodeDoc format.
     private fun makeRequest(pageNumber: Int): Promise<Array<NodeDoc>> {
         return jQuery.get(jsobject<JQueryAjaxSettings> {
             dataType = "json"
@@ -63,19 +64,19 @@ class RedmineSource(val spec: RedmineSourceSpecDoc) : Source {
             }
             url = queryUrl(pageNumber)
         }).then({ data: Any, _: String, _: JQueryXHR ->
-
             val issues = data.unsafeCast<RedmineIssueResponse>().issues
-            val issueDocs: Array<NodeDoc> = issues.map {
+            issues.map {
                 NodeDoc(sourceId, spec._id, spec.description, it.id, it.subject)
             }.toTypedArray()
-            issueDocs
         }).toPouchDB()
     }
 
-    // Form the query URL for the specified results page
+    // Form the query URL for the specified results page.
     private fun queryUrl(pageNumber: Int): String {
-        val offset = pageNumber * perRedmineRequestLimit
-        var queryURL = "${spec.url}/issues.json?offset=${offset}&limit=${perRedmineRequestLimit}"
+        // TODO 2017-08-10 HughG: Retrieve the user ID using the apiKey, and add that to the query filter, to get only
+        // tasks assigned to "me" (and, optionally, not assigned).
+        val offset = pageNumber * PAGE_SIZE_LIMIT
+        var queryURL = "${spec.url}/issues.json?offset=${offset}&limit=${PAGE_SIZE_LIMIT}"
         if (spec.projectId != null) {
             queryURL += "&project_id=${spec.projectId}"
         }

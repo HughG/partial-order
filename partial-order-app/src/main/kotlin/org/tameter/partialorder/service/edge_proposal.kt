@@ -5,31 +5,30 @@ import org.tameter.partialorder.dag.Edge
 import org.tameter.partialorder.dag.Graph
 import kotlin.js.Math
 
-private fun <T>randomItem(list: List<T>): T = list[(Math.random() * list.size).toInt()]
+private fun <T> List<T>.getRandomItem(): T = get((Math.random() * size).toInt())
 
 fun proposeEdges(compositeScoring: CompositeScoring): Collection<Edge> {
-    // Find lowest value for 'rank' with more than 1 item
-    // For each 'graph', select 2 random items from this rank for comparison
+    // Find lowest value for 'rank' with more than 1 item.
+    // For each 'graph', select 2 random items from this rank for comparison.
 
-    val allNodesByTotalRank = compositeScoring.nodes
-            .sortedBy { compositeScoring.score(it) }
-            .groupBy { compositeScoring.score(it) }
-    for (nodesWithEqualRank in allNodesByTotalRank.values) {
-        if(nodesWithEqualRank.size < 2) {
+    // Note: The following works because the default map implementation in JavaScript iterates over keys
+    val allNodesByTotalRank = compositeScoring.nodes.groupBy { compositeScoring.score(it) }
+    val sortedRanks = allNodesByTotalRank.keys.sorted()
+    for (rank in sortedRanks) {
+        val nodesWithEqualRank = allNodesByTotalRank[rank]!!
+        if (nodesWithEqualRank.size < 2) {
             continue
         }
 
-        val list = ArrayList<Edge>()
-        compositeScoring.scorings.filterIsInstance<Graph>().forEach {
-            val first = randomItem(nodesWithEqualRank)
+        return compositeScoring.scorings.filterIsInstance<Graph>().map { graph ->
+            val first = nodesWithEqualRank.getRandomItem()
             var second = first
-            while(second == first) {
-                second = randomItem(nodesWithEqualRank)
+            while (second == first) {
+                second = nodesWithEqualRank.getRandomItem()
             }
 
-            list.add(Edge(it, first, second))
+            Edge(graph, first, second)
         }
-        return list
     }
 
     // Everything is in a unique rank - relax!
