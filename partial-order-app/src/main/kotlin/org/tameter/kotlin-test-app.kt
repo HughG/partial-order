@@ -14,6 +14,7 @@ import org.tameter.partialorder.source.RedmineSource
 import org.tameter.partialorder.source.Source
 import org.tameter.partialorder.source.kpouchdb.*
 import org.tameter.partialorder.ui.controller.GraphUpdater
+import org.tameter.partialorder.ui.view.AppUI
 
 private val SCORING_DB_NAME = "http://localhost:5984/scoring"
 private val CONFIG_DB_NAME = "http://localhost:5984/scoring_config"
@@ -29,17 +30,14 @@ fun main(args: Array<String>) {
         var databases: Databases by setOnce()
         initialiseDatabases(SCORING_DB_NAME, CONFIG_DB_NAME).thenV { db ->
             databases = db
-            val graphUpdater = GraphUpdater(databases.scoringDatabase, graphs)
+            AppUI.databasesProperty.set(databases)
+            val graphUpdater = GraphUpdater(graphs)
             databases.scoringDatabase.liveChanges(ChangeOptions().apply {
                 sinceNow()
                 include_docs = true
             }).onChange(graphUpdater::handleChange)
         }.thenP {
-            databases.configDatabase.allDocs<SourceSpecDoc>(jsobject {
-                include_docs = true
-                startkey = SOURCE_SPEC_DOC_TYPE
-                endkey = SOURCE_SPEC_DOC_TYPE + '\uFFFF'
-            })
+            databases.GetAllConfigs()
         }.thenP { results ->
             loadSourceSpecs(databases.scoringDatabase, results.rows, 0, results.rows.size)
         }.thenV {
@@ -69,12 +67,12 @@ private fun configChangedHandler(db: PouchDB): (Change) -> Unit {
     }
 }
 
-private fun makeSource(doc: PouchDoc): Source {
+fun PouchDoc.MakeSource(): Source {
     @Suppress("UNCHECKED_CAST_TO_NATIVE_INTERFACE")
-    return when (doc.type) {
-        GITHUB_SOURCE_SPEC_DOC_TYPE -> GitHubSource(doc as GitHubSourceSpecDoc)
-        REDMINE_SOURCE_SPEC_DOC_TYPE -> RedmineSource(doc as RedmineSourceSpecDoc)
-        else -> throw RuntimeException("Unknown source spec doc type ${doc.type}")
+    return when (type) {
+        GITHUB_SOURCE_SPEC_DOC_TYPE -> GitHubSource(this as GitHubSourceSpecDoc)
+        REDMINE_SOURCE_SPEC_DOC_TYPE -> RedmineSource(this as RedmineSourceSpecDoc)
+        else -> throw RuntimeException("Unknown source spec doc type ${type}")
     }
 }
 
@@ -82,7 +80,7 @@ private fun loadSourceSpec(
         scoringDatabase: PouchDB,
         doc: PouchDoc
 ): Promise<PouchDB>
-        = makeSource(doc).populate(scoringDatabase)
+        = doc.MakeSource().populate(scoringDatabase)
 
 private fun removeSourceSpec(
     scoringDatabase: PouchDB,

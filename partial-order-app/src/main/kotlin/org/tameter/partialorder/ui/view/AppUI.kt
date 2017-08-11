@@ -14,7 +14,10 @@ import net.yested.core.html.*
 import net.yested.core.properties.*
 import net.yested.core.utils.*
 import net.yested.ext.bootstrap3.*
-import org.tameter.kotlin.delegates.SetOnce
+import org.tameter.Databases
+import org.tameter.MakeSource
+import org.tameter.partialorder.source.GitHubSource
+import org.tameter.partialorder.source.RedmineSource
 import kotlin.dom.addClass
 import kotlin.dom.appendText
 
@@ -22,7 +25,7 @@ object AppUI {
 
     private const val DEFAULT_TAB_NAME = "Nodes"
     val activeTabProperty = Property(DEFAULT_TAB_NAME)
-    private val appElement = document.getElementById("app") as HTMLElement? ?: throw Error("Failed to find app element")
+    val databasesProperty: Property<Databases?> = Property(null)
 
     init {
         fun NavbarMenu.navBarItem(name: String): Any {
@@ -40,6 +43,7 @@ object AppUI {
             }
         }
 
+        val appElement = document.getElementById("app") as HTMLElement? ?: throw Error("Failed to find app element")
         appElement.with {
             navbar(inverted = true) {
                 navbar.addClass("my-custom-navbar")
@@ -51,6 +55,7 @@ object AppUI {
                     navBarItem("Nodes")
                     navBarItem("Edges")
                     navBarItem("Proposed Edges")
+                    navBarItem("Config")
                 }
             }
 
@@ -63,32 +68,88 @@ object AppUI {
     private val container: HTMLElement = document.getElementById("container") as HTMLElement?
             ?: throw Error("element of id container must be added in init() method")
 
-    fun render(db: PouchDB, scoring: CompositeScoring) {
-        while (container.firstChild != null) {
-            container.removeChild(container.firstChild!!)
-        }
+    fun render(scoring: CompositeScoring) {
+        val databases = databasesProperty.get()
 
-        when (activeTabProperty.get()) {
-            "Nodes", -> {
-                val nodesByCombinedRank = scoring.nodes.groupBy { scoring.score(it) }
-                renderNodesByRank(container, nodesByCombinedRank)
+        if(databases != null) {
+            while (container.firstChild != null) {
+                container.removeChild(container.firstChild!!)
             }
-            "Edges" -> {
-                container.append {
-                    div { id = "edges" }
+
+            when (activeTabProperty.get()) {
+                "Nodes", "Default" -> {
+                    val nodesByCombinedRank = scoring.nodes.groupBy { scoring.score(it) }
+                    renderNodesByRank(container, nodesByCombinedRank)
                 }
+                "Edges" -> {
+                    container.append {
+                        div { id = "edges" }
+                    }
 
-                renderEdges(document.getElementById("edges")!!, db, scoring)
-            }
-            "Proposed Edges" -> {
-                val proposedEdges = proposeEdges(scoring)
-                renderProposedEdges(container, db, scoring, proposedEdges)
-            }
-            else -> {
-                console.warn("Unknown tab ${activeTabProperty.get()}")
+                    renderEdges(document.getElementById("edges")!!, databases.scoringDatabase, scoring)
+                }
+                "Proposed Edges" -> {
+                    val proposedEdges = proposeEdges(scoring)
+                    renderProposedEdges(container, databases.scoringDatabase, scoring, proposedEdges)
+                }
+                "Config" -> {
+                    renderConfigsTab(container, databases)
+                }
+                else -> {
+                    console.warn("Unknown tab ${activeTabProperty.get()}")
+                }
             }
         }
     }
+
+    private fun renderConfigsTab(element: Element, databases: Databases) {
+
+        data class ConfigData(val description: String, val type: String, val data: List<Pair<String, String>>)
+
+        databases.GetAllConfigs()
+                .thenV { results ->
+                    element.append {
+                        results.rows.forEach {
+                            val source = it.doc?.MakeSource()
+                            if (source != null) {
+                                val rowData = when (source) {
+                                    is GitHubSource -> {
+                                        val data = arrayListOf(
+                                                "User" to source.spec.user,
+                                                "Repo" to source.spec.repo
+                                        )
+                                        ConfigData(source.spec.description, "GitHub", data)
+                                    }
+                                    is RedmineSource -> {
+                                        val data = arrayListOf(
+                                                "URL" to source.spec.url,
+                                                "API Key" to (source.spec.apiKey ?: ""),
+                                                "Project ID" to (source.spec.projectId ?: "")
+                                        )
+                                        ConfigData(source.spec.description, "Redmine", data)
+                                    }
+                                    else -> ConfigData("Error", "Invalid", emptyList())
+                                }
+                                p {
+                                    table {
+                                        thead {
+                                            th { +rowData.description }
+                                            th { +rowData.type }
+                                        }
+                                        rowData.data.forEach {
+                                            tr {
+                                                td { +it.first }
+                                                td { +it.second }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+    }
+
 
     private fun renderNodesByRank(element: Element, nodesByCombinedRank: Map<Int, List<Node>>) {
         element.append {
