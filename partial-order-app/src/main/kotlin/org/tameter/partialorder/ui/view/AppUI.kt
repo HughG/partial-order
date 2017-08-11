@@ -3,9 +3,7 @@ package org.tameter.partialorder.ui.view
 import net.yested.core.html.*
 import net.yested.core.properties.Property
 import net.yested.core.utils.with
-import net.yested.ext.bootstrap3.NavbarMenu
-import net.yested.ext.bootstrap3.container
-import net.yested.ext.bootstrap3.navbar
+import net.yested.ext.bootstrap3.*
 import org.tameter.Databases
 import org.tameter.MakeSource
 import org.tameter.kpouchdb.PouchDB
@@ -36,6 +34,7 @@ object AppUI {
             return item(active = active) {
                 onclick = { activeTabProperty.set(name) }
                 a {
+                    href = "#${name.filterNot { char -> char == ' ' }}"
                     appendText(name)
                 }
             }
@@ -141,7 +140,32 @@ object AppUI {
                                             }
                                         }
                                     }
+
+                                    button {
+                                        onclick = {
+                                        }
+                                        appendText("Edit")
+                                    }
+
+                                    button {
+                                        onclick = {
+                                        }
+                                        appendText("Test Connection")
+                                    }
+
+                                    button {
+                                        onclick = {
+                                        }
+                                        appendText("Delete")
+                                    }
                                 }
+                            }
+                        }
+
+                        p {
+                            button {
+                                onclick = { }
+                                appendText("New...")
                             }
                         }
                     }
@@ -152,7 +176,7 @@ object AppUI {
     private fun renderNodesByRank(element: HTMLElement, nodesByCombinedRank: Map<Int, List<Node>>) {
         element.with {
             table {
-                tr {
+                thead {
                     th { appendText("Rank") }
                     th { appendText("Source") }
                     th { appendText("Description") }
@@ -197,7 +221,13 @@ object AppUI {
 
     private fun renderEdges(element: HTMLElement, db: PouchDB, graph: Graph) {
         element.table {
-            tr {
+            thead {
+                th {
+                    colSpan = 5
+                    appendText(graph.id)
+                }
+            }
+            thead {
                 th {
                     colSpan = 2
                     appendText("From")
