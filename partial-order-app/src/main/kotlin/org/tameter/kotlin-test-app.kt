@@ -31,6 +31,12 @@ fun main(args: Array<String>) {
         initialiseDatabases(SCORING_DB_NAME, CONFIG_DB_NAME).thenV { db ->
             databases = db
             AppUI.databasesProperty.set(databases)
+
+            databases.configDatabase.liveChanges(ChangeOptions().apply {
+                sinceNow()
+                include_docs = true
+            }).onChange(configChangedHandler(databases.scoringDatabase))
+
             val graphUpdater = GraphUpdater(graphs)
             databases.scoringDatabase.liveChanges(ChangeOptions().apply {
                 sinceNow()
@@ -40,14 +46,6 @@ fun main(args: Array<String>) {
             databases.GetAllConfigs()
         }.thenP { results ->
             loadSourceSpecs(databases.scoringDatabase, results.rows, 0, results.rows.size)
-        }.thenV {
-            // TODO 2017-08-10 HughG: Maybe we should set up the liveChanges handler before doing the initial allDocs
-            // call.  As it stands, if configs are added/removed between the allDocs and liveChanges calls, they will be
-            // missed, I think.
-            databases.configDatabase.liveChanges(ChangeOptions().apply {
-                sinceNow()
-                include_docs = true
-            }).onChange(configChangedHandler(databases.scoringDatabase))
         }.catchAndLog()
     }
 }
