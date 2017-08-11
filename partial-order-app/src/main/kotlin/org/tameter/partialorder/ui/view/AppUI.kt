@@ -1,23 +1,21 @@
 package org.tameter.partialorder.ui.view
 
-import kotlinx.html.*
-import kotlinx.html.dom.append
-import kotlinx.html.js.onClickFunction
+import net.yested.core.html.*
+import net.yested.core.properties.Property
+import net.yested.core.utils.with
+import net.yested.ext.bootstrap3.NavbarMenu
+import net.yested.ext.bootstrap3.container
+import net.yested.ext.bootstrap3.navbar
+import org.tameter.Databases
+import org.tameter.MakeSource
 import org.tameter.kpouchdb.PouchDB
 import org.tameter.partialorder.dag.*
 import org.tameter.partialorder.scoring.Scoring
 import org.tameter.partialorder.service.proposeEdges
-import org.w3c.dom.Element
-import org.w3c.dom.HTMLElement
-import kotlin.browser.document
-import net.yested.core.html.*
-import net.yested.core.properties.*
-import net.yested.core.utils.*
-import net.yested.ext.bootstrap3.*
-import org.tameter.Databases
-import org.tameter.MakeSource
 import org.tameter.partialorder.source.GitHubSource
 import org.tameter.partialorder.source.RedmineSource
+import org.w3c.dom.HTMLElement
+import kotlin.browser.document
 import kotlin.dom.addClass
 import kotlin.dom.appendText
 
@@ -42,14 +40,14 @@ object AppUI {
                 }
             }
         }
-
+        
         val appElement = document.getElementById("app") as HTMLElement? ?: throw Error("Failed to find app element")
         appElement.with {
             navbar(inverted = true) {
                 navbar.addClass("my-custom-navbar")
                 brand {
-                    appendText("Partial Order Application")
                     onclick = { activeTabProperty.set(DEFAULT_TAB_NAME) }
+                    appendText("Partial Order Application")
                 }
                 menu {
                     navBarItem("Nodes")
@@ -82,11 +80,11 @@ object AppUI {
                     renderNodesByRank(container, nodesByCombinedRank)
                 }
                 "Edges" -> {
-                    container.append {
+                    container.with {
                         div { id = "edges" }
                     }
 
-                    renderEdges(document.getElementById("edges")!!, databases.scoringDatabase, scoring)
+                    renderEdges(document.getElementById("edges")!! as HTMLElement, databases.scoringDatabase, scoring)
                 }
                 "Proposed Edges" -> {
                     val proposedEdges = proposeEdges(scoring)
@@ -102,13 +100,13 @@ object AppUI {
         }
     }
 
-    private fun renderConfigsTab(element: Element, databases: Databases) {
+    private fun renderConfigsTab(element: HTMLElement, databases: Databases) {
 
         data class ConfigData(val description: String, val type: String, val data: List<Pair<String, String>>)
 
         databases.GetAllConfigs()
                 .thenV { results ->
-                    element.append {
+                    element.with {
                         results.rows.forEach {
                             val source = it.doc?.MakeSource()
                             if (source != null) {
@@ -133,13 +131,13 @@ object AppUI {
                                 p {
                                     table {
                                         thead {
-                                            th { +rowData.description }
-                                            th { +rowData.type }
+                                            th { appendText(rowData.description) }
+                                            th { appendText(rowData.type) }
                                         }
                                         rowData.data.forEach {
                                             tr {
-                                                td { +it.first }
-                                                td { +it.second }
+                                                td { appendText(it.first) }
+                                                td { appendText(it.second) }
                                             }
                                         }
                                     }
@@ -151,13 +149,13 @@ object AppUI {
     }
 
 
-    private fun renderNodesByRank(element: Element, nodesByCombinedRank: Map<Int, List<Node>>) {
-        element.append {
+    private fun renderNodesByRank(element: HTMLElement, nodesByCombinedRank: Map<Int, List<Node>>) {
+        element.with {
             table {
                 tr {
-                    th { +"Rank" }
-                    th { +"Source" }
-                    th { +"Description" }
+                    th { appendText("Rank") }
+                    th { appendText("Source") }
+                    th { appendText("Description") }
                 }
                 for (rank in nodesByCombinedRank.keys.sorted()) {
                     val nodes = nodesByCombinedRank[rank]!!
@@ -167,17 +165,17 @@ object AppUI {
                     }
                     tr {
                         th {
-                            attributes["rowspan"] = nodes.size.toString()
-                            +rank.toString()
+                            rowSpan = nodes.size
+                            appendText(rank.toString())
                         }
                         val node = nodes[0]
-                        td { +node.source }
-                        td { +node.description }
+                        td { appendText(node.source) }
+                        td { appendText(node.description) }
                     }
                     for (node in nodes.drop(1)) {
                         tr {
-                            td { +node.source }
-                            td { +node.description }
+                            td { appendText(node.source) }
+                            td { appendText(node.description) }
                         }
                     }
                 }
@@ -185,8 +183,8 @@ object AppUI {
         }
     }
 
-    private fun renderEdges(element: Element, db: PouchDB, graphs: CompositeScoring) {
-        element.append {
+    private fun renderEdges(element: HTMLElement, db: PouchDB, graphs: CompositeScoring) {
+        element.with {
             table {
                 tr {
                     for (graph in graphs.scorings.filterIsInstance<Graph>()) {
@@ -197,33 +195,34 @@ object AppUI {
         }
     }
 
-    private fun renderEdges(element: HtmlBlockTag, db: PouchDB, graph: Graph) {
+    private fun renderEdges(element: HTMLElement, db: PouchDB, graph: Graph) {
         element.table {
             tr {
                 th {
-                    attributes["colspan"] = "2"
-                    +"From"
+                    colSpan = 2
+                    appendText("From")
                 }
                 th {
-                    attributes["colspan"] = "2"
-                    +"To"
+                    colSpan = 2
+                    appendText("To")
                 }
                 th {
-                    +"Remove"
+                    appendText("Remove")
                 }
             }
             for (edge in graph.edges) {
                 tr {
-                    td { +graph.scoreById(edge.fromId).toString() }
-                    td { +getNodeDescription(graph, edge.fromId) }
-                    td { +graph.scoreById(edge.toId).toString() }
-                    td { +getNodeDescription(graph, edge.toId) }
-                    td(classes = "button") {
-                        +"[X]"
-                        onClickFunction = {
+                    td { appendText(graph.scoreById(edge.fromId).toString()) }
+                    td { appendText(getNodeDescription(graph, edge.fromId)) }
+                    td { appendText(graph.scoreById(edge.toId).toString()) }
+                    td { appendText(getNodeDescription(graph, edge.toId)) }
+                    td {
+                        className = "button"
+                        onclick = {
                             console.log(edge.toPrettyString())
                             edge.remove(db)
                         }
+                        appendText("[X]")
                     }
                 }
             }
@@ -231,45 +230,47 @@ object AppUI {
     }
 
     private fun renderProposedEdges(
-            element: Element,
+            element: HTMLElement,
             db: PouchDB,
             compositeScoring: CompositeScoring,
             possibleEdges: Collection<Edge>
                            ) {
-        element.append {
+        element.with {
             table {
                 tr {
                     th {
-                        +"Axis"
+                        appendText("Axis")
                     }
                     th {
-                        attributes["colspan"] = "2"
-                        +"From"
+                        colSpan = 2
+                        appendText("From")
                     }
                     th {
-                        attributes["colspan"] = "2"
-                        +"To"
+                        colSpan = 2
+                        appendText("To")
                     }
                 }
                 for (edge in possibleEdges) {
                     val scoring = compositeScoring.findScoringById(edge.graphId)!!
                     tr {
-                        td { +scoring.id }
-                        td { +compositeScoring.scoreById(edge.fromId).toString() }
-                        td(classes = "button") {
-                            +getNodeDescription(scoring, edge.fromId)
-                            onClickFunction = {
+                        td { appendText(scoring.id) }
+                        td { appendText(compositeScoring.scoreById(edge.fromId).toString()) }
+                        td {
+                            className = "button"
+                            onclick = {
                                 console.log(edge.toPrettyString())
                                 edge.store(db)
                             }
+                            appendText(getNodeDescription(scoring, edge.fromId))
                         }
-                        td { +compositeScoring.scoreById(edge.toId).toString() }
-                        td(classes = "button") {
-                            +getNodeDescription(scoring, edge.toId)
-                            onClickFunction = {
+                        td { compositeScoring.scoreById(edge.toId).toString() }
+                        td {
+                            className = "button"
+                            onclick = {
                                 console.log(edge.toPrettyString())
                                 edge.reverse().store(db)
                             }
+                            appendText(getNodeDescription(scoring, edge.toId))
                         }
                     }
                 }
