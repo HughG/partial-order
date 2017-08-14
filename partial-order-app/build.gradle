@@ -2,7 +2,7 @@ group 'org.tameter.partial-order'
 version '0.1-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.1.2'
+    ext.kotlin_version = '1.1.3'
 
     repositories {
         mavenCentral()
@@ -17,13 +17,14 @@ apply plugin: 'kotlin2js'
 repositories {
     mavenCentral()
     jcenter()
+    mavenLocal() // For local install of unpublished Yested versions.
 }
 
 dependencies {
     //Fill this in with the version of kotlinx in use in your project
     def kotlinx_html_version = "0.6.3"
 
-    def yested_version = '1.0-alpha-2'
+    def yested_version = '1.0-SNAPSHOT'
 
     // include for server side
     // compile "org.jetbrains.kotlinx:kotlinx-html-jvm:${kotlinx_html_version}"
@@ -38,6 +39,9 @@ dependencies {
     compile "net.yested:Yested:$yested_version"
 }
 
+compileKotlin2Js {
+    kotlinOptions.sourceMap = true
+}
 
 task deployJs(type: Copy) {
     group = 'deploy'
@@ -54,7 +58,8 @@ task deployJs(type: Copy) {
     into "${projectDir}/web/js"
     include { fileTreeElement ->
         def path = fileTreeElement.path
-        path.endsWith(".js") && (path.startsWith("META-INF/resources/") || !path.startsWith("META-INF/"))
+        (path.endsWith(".js") || path.endsWith(".js.map")) &&
+            (path.startsWith("META-INF/resources/") || !path.startsWith("META-INF/"))
     }
 }
 
