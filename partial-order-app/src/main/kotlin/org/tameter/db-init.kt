@@ -33,12 +33,29 @@ internal fun initialiseDatabases(scoringDatabaseName: String, configDatabaseName
 }
 
 internal fun resetDatabase(databaseName: String): Promise<PouchDB> {
-    return (PouchDB(databaseName)).destroy().thenP {
+    return destroyDatabase(databaseName).thenP {
         ensureDatabase(databaseName)
     }
 }
 
+// TODO 2017-08-14 HughG: Add a ".catch" to promises to give the user a UI message when we can't reach CouchDB.
+private fun logCouchDBWarning() {
+    val NO_COUCH_DB_ERROR = """Caught [status: 0, name: unknown, message: null]
+null: (stack is undefined)"""
+
+    console.log("Note: If you see an error like the following, it probably means CouchDB is not running or unreachable.")
+    for (line in NO_COUCH_DB_ERROR.lines()) {
+        console.log("    " + line)
+    }
+}
+
+private fun destroyDatabase(databaseName: String): Promise<dynamic> {
+    logCouchDBWarning()
+    return (PouchDB(databaseName)).destroy()
+}
+
 private fun ensureDatabase(databaseName: String): Promise<PouchDB> {
+    logCouchDBWarning()
     val db: PouchDB = PouchDB(databaseName)
 
     return db.info().thenV { info ->

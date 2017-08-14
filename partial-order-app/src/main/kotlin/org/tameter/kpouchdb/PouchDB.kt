@@ -44,14 +44,12 @@ fun PouchDB.liveChanges(options: ChangeOptions): ChangeFeed {
 }
 
 external interface PouchDBOptions
-fun PouchDBOptions(): PouchDBOptions = js("{ return {}; }")
 
 external interface AllDocsOptions {
     var startkey : String
     var endkey: String
     var include_docs: Boolean
 }
-fun AllDocsOptions(): AllDocsOptions = js("{ return {}; }")
 
 external interface ChangeOptions {
     var since: dynamic /* Int | String */
@@ -59,7 +57,6 @@ external interface ChangeOptions {
     var include_docs: Boolean
     var limit: Int
 }
-fun ChangeOptions(): ChangeOptions = js("{ return {}; }")
 fun ChangeOptions.sinceNow() { this.since = "now" }
 fun ChangeOptions.sinceSeq(seq : Int) { this.since = seq }
 

@@ -32,13 +32,13 @@ fun main(args: Array<String>) {
             databases = db
             AppUI.databasesProperty.set(databases)
 
-            databases.configDatabase.liveChanges(ChangeOptions().apply {
+            databases.configDatabase.liveChanges(jsobject {
                 sinceNow()
                 include_docs = true
             }).onChange(configChangedHandler(databases.scoringDatabase))
 
             val graphUpdater = GraphUpdater(graphs)
-            databases.scoringDatabase.liveChanges(ChangeOptions().apply {
+            databases.scoringDatabase.liveChanges(jsobject {
                 sinceNow()
                 include_docs = true
             }).onChange(graphUpdater::handleChange)

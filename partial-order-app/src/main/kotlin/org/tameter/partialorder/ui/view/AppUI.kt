@@ -243,9 +243,9 @@ object AppUI {
             for (edge in graph.edges) {
                 tr {
                     td { appendText(graph.scoreById(edge.fromId).toString()) }
-                    td { appendText(getNodeDescription(graph, edge.fromId)) }
+                    td { nodeDescription(graph, edge.fromId) }
                     td { appendText(graph.scoreById(edge.toId).toString()) }
-                    td { appendText(getNodeDescription(graph, edge.toId)) }
+                    td { nodeDescription(graph, edge.toId) }
                     td {
                         className = "button"
                         onclick = {
@@ -291,7 +291,7 @@ object AppUI {
                                 console.log(edge.toPrettyString())
                                 edge.store(db)
                             }
-                            appendText(getNodeDescription(scoring, edge.fromId))
+                            nodeDescription(scoring, edge.fromId)
                         }
                         td { compositeScoring.scoreById(edge.toId).toString() }
                         td {
@@ -300,7 +300,7 @@ object AppUI {
                                 console.log(edge.toPrettyString())
                                 edge.reverse().store(db)
                             }
-                            appendText(getNodeDescription(scoring, edge.toId))
+                            nodeDescription(scoring, edge.toId)
                         }
                     }
                 }
@@ -308,5 +308,14 @@ object AppUI {
         }
     }
 
-    private fun getNodeDescription(graph: Scoring, fromId: String) = graph.owner.findNodeById(fromId)?.description ?: "???"
+    private fun HTMLElement.nodeDescription(graph: Scoring, fromId: String) {
+        val node = graph.owner.findNodeById(fromId)
+        if (node == null) {
+            appendText("???")
+        } else {
+            appendText(node.source)
+            br()
+            appendText(node.description)
+        }
+    }
 }
